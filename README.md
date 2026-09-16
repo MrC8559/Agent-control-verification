@@ -17,7 +17,7 @@ The project focuses on decision-to-effect verification. It is not intended to be
 
 Experimental and pre-alpha. ACV output is not a certification or security guarantee.
 
-The current implementation includes a deterministic synthetic laboratory, an out-of-process filesystem effect observer, a deterministic approval model, and a control-failure posture model. No production agent, model provider, human-approval system, or third-party service is contacted by the default test suite.
+The current implementation includes a deterministic synthetic laboratory, an out-of-process filesystem effect observer, approval and control-failure models, and a versioned evidence bundle format. No production agent, model provider, human-approval system, or third-party service is contacted by the default test suite.
 
 ## Why this exists
 
@@ -49,6 +49,8 @@ Requires Python 3.11+.
 ```bash
 python -m pip install -e .
 python -m agent_control_verification demo
+python -m agent_control_verification evidence-demo --output evidence.json
+python -m agent_control_verification render-evidence evidence.json
 python -m unittest discover -s tests -v
 ```
 
@@ -69,7 +71,9 @@ Approval tests cover exact semantic binding, cross-identity/session/tool misuse,
 
 Control-failure tests distinguish policy denial, explicit security refusal, timeout, transport loss, and malformed responses. A configured fail-open posture is recorded as evidence. It does not turn ungoverned execution into `PASS`.
 
-## Implemented properties
+Evidence bundles contain fingerprints, component versions, explicit missing-evidence fields, privacy metadata, and an integrity digest. The default bundle format does not carry raw action payloads or raw control-reason text.
+
+## Implemented properties and evidence
 
 The current laboratory includes:
 
@@ -83,6 +87,7 @@ The current laboratory includes:
 - approval freshness checks;
 - single-use approval replay verification;
 - explicit control-failure cause and posture evidence;
+- versioned JSON evidence bundles with integrity validation;
 - `PASS`, `FAIL`, and `INCONCLUSIVE` results;
 - deterministic regression tests and GitHub Actions CI.
 
@@ -91,19 +96,21 @@ Relevant design notes:
 - [`docs/PROCESS_BOUNDARY.md`](docs/PROCESS_BOUNDARY.md)
 - [`docs/APPROVAL_MODEL.md`](docs/APPROVAL_MODEL.md)
 - [`docs/FAILURE_POSTURE.md`](docs/FAILURE_POSTURE.md)
+- [`docs/EVIDENCE_BUNDLE.md`](docs/EVIDENCE_BUNDLE.md)
 - [`docs/THREAT_MODEL.md`](docs/THREAT_MODEL.md)
 - [`docs/RESEARCH.md`](docs/RESEARCH.md)
+
+The machine-readable schema is [`schemas/evidence-bundle.schema.json`](schemas/evidence-bundle.schema.json).
 
 ## Next work
 
 The next planned steps are:
 
-1. define a stable JSON evidence/report schema;
-2. strengthen identity and tool-scope evidence;
-3. create reproducible evidence bundles;
-4. select the first real agent host/control integration;
-5. map implemented properties to relevant OWASP agent-security work;
-6. add version-pinned regression matrices for real hosts and control layers.
+1. strengthen identity and tool-scope evidence;
+2. add richer ordered event evidence where hosts expose it;
+3. select the first real agent host/control integration;
+4. map implemented properties to relevant OWASP agent-security work;
+5. add version-pinned regression matrices for real hosts and control layers.
 
 See [`ROADMAP.md`](ROADMAP.md) for the current sequence.
 
