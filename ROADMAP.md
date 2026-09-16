@@ -44,11 +44,16 @@ Goal: prove that the verifier can distinguish a secure control boundary from one
 
 ## v0.1.0: First real integration
 
-- [ ] Select one real agent host/control boundary
-- [ ] Build a narrow adapter
-- [ ] Reproduce synthetic invariants against the real host
-- [ ] Document unsupported or untestable properties explicitly
-- [ ] Publish a version-pinned conformance-style report without claiming certification
+- [x] Select Codex CLI as the first real agent host and document the trust boundaries
+- [ ] Build the narrow Codex hook adapter and disposable-workspace harness
+- [ ] Reproduce `deny_prevents_effect` against a real Codex `PreToolUse` decision
+- [ ] Reproduce exact-action binding against Codex hook input or `updatedInput`
+- [ ] Reproduce control-failure posture against a controlled Codex hook failure
+- [ ] Populate ordered real-host evidence where the host exposes enough information
+- [ ] Document unsupported or untestable Codex tool paths explicitly
+- [ ] Publish a version-pinned report without claiming certification
+
+See [`docs/CODEX_FIRST_INTEGRATION.md`](docs/CODEX_FIRST_INTEGRATION.md) for the selection decision and initial experiment boundary.
 
 ## Later
 
