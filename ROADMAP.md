@@ -44,11 +44,13 @@ Goal: prove that the verifier can distinguish a secure control boundary from one
 
 ## v0.1.0: First real integration
 
-- [ ] Select one real agent host/control boundary
-- [ ] Build a narrow adapter
-- [ ] Reproduce synthetic invariants against the real host
-- [ ] Document unsupported or untestable properties explicitly
-- [ ] Publish a version-pinned conformance-style report without claiming certification
+- [x] Select Codex CLI 0.154.0 as the first host ([Decision 0001](docs/decisions/0001-first-real-host-codex.md))
+- [ ] Build a narrow Codex native-hook adapter
+- [ ] Verify a denied `apply_patch` against independent filesystem state
+- [ ] Verify one allowed `apply_patch` and pair pre/post hook evidence
+- [ ] Measure one controlled hook-failure case and preserve the observed host posture
+- [ ] Document unsupported or untestable Codex tool paths explicitly
+- [ ] Publish a version-pinned evidence report without claiming certification
 
 ## Later
 
