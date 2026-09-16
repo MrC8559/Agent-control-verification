@@ -2,7 +2,7 @@
 
 > Verify that AI-agent security decisions are enforced at the point of effect.
 
-Agent Control Verification (ACV) is an early-stage open-source research project for testing a simple security property:
+Agent Control Verification (ACV) is an open-source security research project built around one narrow question:
 
 > A control reporting `DENY` does not, by itself, prove that the prohibited effect was prevented.
 
@@ -15,13 +15,32 @@ The project focuses on decision-to-effect verification. It is not intended to be
 
 ## Status
 
-Experimental and pre-alpha. ACV output is not a certification or security guarantee.
+**Research preview. Experimental and pre-alpha.**
 
-The current implementation includes a deterministic synthetic laboratory, an out-of-process filesystem effect observer, approval and control-failure models, a versioned evidence bundle format, and a narrow Codex CLI `0.154.0` native-hook probe for `apply_patch`.
+The deterministic verification core is working. ACV can independently observe filesystem effects across a process boundary, test approval binding and replay properties, model control failures, and export versioned redacted evidence bundles.
 
-The Codex probe can prepare a disposable workspace, record redacted `PreToolUse` and `PostToolUse` evidence, and collect the result against an independently read marker file. No live Codex evidence report has been published yet. The default test suite does not contact a production agent, model provider, human-approval system, or third-party service.
+The current milestone is **v0.1.0: first real host integration**. Codex CLI `0.154.0` is the pinned first host.
 
-Codex CLI `0.154.0` is the selected first real host integration. The selection and scope are documented in [Decision 0001](docs/decisions/0001-first-real-host-codex.md), and the runnable probe workflow is documented in [CODEX_PROBE.md](docs/CODEX_PROBE.md).
+The Codex adapter, disposable probe workspace, redacted hook recorder, and evidence collector are implemented. The remaining milestone is to capture reproducible live Codex evidence for deny, allow, and controlled hook-failure cases.
+
+No live Codex evidence report has been published yet. ACV output is not a certification or security guarantee.
+
+- [Public project status](docs/PUBLIC_STATUS.md)
+- [Roadmap](ROADMAP.md)
+- [Codex probe](docs/CODEX_PROBE.md)
+- [First-host decision](docs/decisions/0001-first-real-host-codex.md)
+
+## Current research milestone
+
+The first real-host experiment is deliberately narrow. It tests Codex native `PreToolUse` and `PostToolUse` hooks around one harmless `apply_patch` operation in a disposable local workspace.
+
+The experiment asks three questions:
+
+1. If the hook denies the patch, does the marker file remain unchanged when ACV reads the filesystem independently?
+2. If the hook allows the patch, do the pre-tool and post-tool records correspond to the independently observed file effect?
+3. If the hook fails in a controlled way, does the host proceed, block, or leave the outcome uncertain?
+
+A result applies only to the exact version and execution path that was observed. ACV does not infer coverage for shell execution, Code Mode, MCP, subagents, or other tool paths from an `apply_patch` result.
 
 ## Why this exists
 
@@ -36,6 +55,30 @@ Agent systems can fail between a control decision and the resulting tool effect.
 
 ACV turns these cases into explicit, reproducible properties.
 
+## What works today
+
+The current implementation includes:
+
+- stable action fingerprints;
+- explicit control decision records;
+- synthetic file, email, and HTTP effects;
+- audit-event evidence;
+- out-of-process filesystem observation using SHA-256 snapshots;
+- approval binding over principal, session, tool, target, and arguments;
+- approval freshness checks;
+- single-use approval replay verification;
+- explicit control-failure cause and posture evidence;
+- `PASS`, `FAIL`, and `INCONCLUSIVE` results;
+- versioned JSON evidence bundles with integrity validation;
+- redacted-by-default evidence export;
+- deterministic regression tests and GitHub Actions CI;
+- a Codex `0.154.0` `apply_patch` hook adapter;
+- disposable Codex probe workspace generation;
+- redacted `PreToolUse` and `PostToolUse` recording;
+- a collector that compares hook evidence with the marker file read directly from the filesystem.
+
+The default test suite does not contact a production agent, model provider, human-approval system, or third-party service.
+
 ## Principles
 
 - Observe effects independently where the environment allows it.
@@ -45,6 +88,7 @@ ACV turns these cases into explicit, reproducible properties.
 - Prefer deterministic tests before model-dependent tests.
 - Use synthetic local effects by default.
 - Treat standards as references unless external conformance has actually been established.
+- Measure coverage per host version and execution path instead of assuming it.
 
 ## Quick start
 
@@ -58,7 +102,7 @@ python -m agent_control_verification render-evidence evidence.json
 python -m unittest discover -s tests -v
 ```
 
-The demo contains secure and deliberately vulnerable implementations. Typical results include:
+The deterministic demo contains secure and deliberately vulnerable implementations. Typical results include:
 
 ```text
 PASS  deny_prevents_effect   hardened-deny
@@ -77,27 +121,20 @@ Control-failure tests distinguish policy denial, explicit security refusal, time
 
 Evidence bundles contain fingerprints, component versions, explicit missing-evidence fields, privacy metadata, and an integrity digest. The default bundle format does not carry raw action payloads or raw control-reason text.
 
-## Implemented properties and evidence
+## Codex probe
 
-The current laboratory includes:
+The first live experiment uses a new or empty disposable directory and one marker file. ACV prepares project-scoped Codex hooks, records redacted hook evidence, then independently reads the marker file during collection.
 
-- stable action fingerprints;
-- explicit control decision records;
-- synthetic file, email, and HTTP effects;
-- audit-event evidence;
-- out-of-process filesystem observation using SHA-256 snapshots;
-- a minimal JSON subprocess decision contract;
-- approval binding over principal, session, tool, target, and arguments;
-- approval freshness checks;
-- single-use approval replay verification;
-- explicit control-failure cause and posture evidence;
-- versioned JSON evidence bundles with integrity validation;
-- `PASS`, `FAIL`, and `INCONCLUSIVE` results;
-- deterministic regression tests and GitHub Actions CI;
-- a Codex `0.154.0` `apply_patch` hook adapter with redacted pre/post evidence;
-- a disposable Codex probe workspace generator and evidence collector.
+The supported fixtures are:
 
-Relevant design notes:
+- deny;
+- allow;
+- malformed hook output;
+- hook exit error.
+
+The workflow and safety boundary are documented in [`docs/CODEX_PROBE.md`](docs/CODEX_PROBE.md).
+
+## Design notes
 
 - [`docs/PROCESS_BOUNDARY.md`](docs/PROCESS_BOUNDARY.md)
 - [`docs/APPROVAL_MODEL.md`](docs/APPROVAL_MODEL.md)
@@ -108,20 +145,22 @@ Relevant design notes:
 - [`docs/CODEX_PROBE.md`](docs/CODEX_PROBE.md)
 - [`docs/decisions/0001-first-real-host-codex.md`](docs/decisions/0001-first-real-host-codex.md)
 
-The machine-readable schema is [`schemas/evidence-bundle.schema.json`](schemas/evidence-bundle.schema.json).
+The machine-readable evidence schema is [`schemas/evidence-bundle.schema.json`](schemas/evidence-bundle.schema.json).
 
 ## Next work
 
-The next planned steps are:
+The immediate sequence is:
 
-1. run the deny probe against an actual Codex CLI `0.154.0` session and verify the marker file independently;
-2. run the matching allow case and pair pre/post evidence with the observed file effect;
-3. capture one controlled Codex hook-failure case and preserve the observed host posture;
-4. document which Codex tool paths were actually observed and which remain untested;
-5. publish a version-pinned evidence report without claiming certification;
-6. add other hosts only after the first real integration produces reproducible evidence.
+1. run the deny probe against an actual Codex CLI `0.154.0` session;
+2. independently verify the marker state and preserve the evidence bundle;
+3. run the matching allow case and pair pre/post evidence with the observed file effect;
+4. capture one controlled hook-failure case;
+5. document observed and untested Codex paths explicitly;
+6. publish the first version-pinned evidence report without claiming certification.
 
-See [`ROADMAP.md`](ROADMAP.md) for the current sequence.
+Only after that does the roadmap broaden toward additional Codex execution paths, other agent hosts, MCP boundaries, and continuous regression testing.
+
+See [`ROADMAP.md`](ROADMAP.md) for the longer sequence.
 
 ## Related work
 
@@ -139,6 +178,8 @@ ACV is independent. It is not an OWASP project and does not currently claim OWAS
 The repository must remain safe to clone and run.
 
 Default tests use local synthetic resources. Do not add code that attacks third-party systems, exfiltrates real secrets, scans public targets without authorization, or performs live consequential actions by default.
+
+Real-host probes must remain local, disposable, version-pinned, and explicit about what was and was not observed.
 
 ## License
 
