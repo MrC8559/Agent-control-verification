@@ -6,10 +6,10 @@ from pathlib import Path
 import sys
 
 from .codex_evidence import (
-    collect_codex_probe,
     detect_codex_version,
     write_codex_probe_bundle,
 )
+from .codex_evidence_guard import collect_codex_probe_strict
 from .codex_integration import (
     CODEX_TARGET_VERSION,
     CodexIntegrationError,
@@ -193,7 +193,7 @@ def main(argv: list[str] | None = None) -> int:
     if args.command == "codex-collect":
         try:
             observed_version = args.codex_version or detect_codex_version(args.codex)
-            collection = collect_codex_probe(
+            collection = collect_codex_probe_strict(
                 args.workspace,
                 codex_version=observed_version,
                 acv_commit=args.acv_commit,
