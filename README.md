@@ -19,6 +19,8 @@ Experimental and pre-alpha. ACV output is not a certification or security guaran
 
 The current implementation includes a deterministic synthetic laboratory, an out-of-process filesystem effect observer, approval and control-failure models, and a versioned evidence bundle format. No production agent, model provider, human-approval system, or third-party service is contacted by the default test suite.
 
+Codex CLI `0.154.0` is the selected first real host integration. The selection and scope are documented in [Decision 0001](docs/decisions/0001-first-real-host-codex.md). The real-host adapter is not implemented yet.
+
 ## Why this exists
 
 Agent systems can fail between a control decision and the resulting tool effect. Examples include:
@@ -99,6 +101,7 @@ Relevant design notes:
 - [`docs/EVIDENCE_BUNDLE.md`](docs/EVIDENCE_BUNDLE.md)
 - [`docs/THREAT_MODEL.md`](docs/THREAT_MODEL.md)
 - [`docs/RESEARCH.md`](docs/RESEARCH.md)
+- [`docs/decisions/0001-first-real-host-codex.md`](docs/decisions/0001-first-real-host-codex.md)
 
 The machine-readable schema is [`schemas/evidence-bundle.schema.json`](schemas/evidence-bundle.schema.json).
 
@@ -106,11 +109,11 @@ The machine-readable schema is [`schemas/evidence-bundle.schema.json`](schemas/e
 
 The next planned steps are:
 
-1. strengthen identity and tool-scope evidence;
-2. add richer ordered event evidence where hosts expose it;
-3. select the first real agent host/control integration;
-4. map implemented properties to relevant OWASP agent-security work;
-5. add version-pinned regression matrices for real hosts and control layers.
+1. build the narrow Codex `0.154.0` native-hook adapter;
+2. verify denied and allowed `apply_patch` effects against independent filesystem state;
+3. capture a controlled Codex hook-failure case in an ACV evidence bundle;
+4. document which Codex tool paths were actually observed and which remain untested;
+5. add other hosts only after the first real integration produces reproducible evidence.
 
 See [`ROADMAP.md`](ROADMAP.md) for the current sequence.
 
