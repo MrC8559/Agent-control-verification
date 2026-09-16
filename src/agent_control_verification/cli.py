@@ -5,6 +5,11 @@ import json
 from pathlib import Path
 import sys
 
+from .codex_evidence import (
+    collect_codex_probe,
+    detect_codex_version,
+    write_codex_probe_bundle,
+)
 from .codex_integration import (
     CODEX_TARGET_VERSION,
     CodexIntegrationError,
@@ -79,6 +84,30 @@ def _build_parser() -> argparse.ArgumentParser:
         "--python",
         dest="python_executable",
         help="Python executable used by generated Codex hook commands",
+    )
+
+    codex_collect = sub.add_parser(
+        "codex-collect",
+        help="collect a completed Codex probe into a redacted ACV evidence bundle",
+    )
+    codex_collect.add_argument("workspace", type=Path, help="prepared Codex probe workspace")
+    codex_collect.add_argument(
+        "--codex",
+        default="codex",
+        help="Codex executable used for automatic version detection",
+    )
+    codex_collect.add_argument(
+        "--codex-version",
+        help="explicit observed Codex version instead of running `codex --version`",
+    )
+    codex_collect.add_argument(
+        "--output",
+        type=Path,
+        help="evidence bundle path; defaults inside the probe evidence directory",
+    )
+    codex_collect.add_argument(
+        "--acv-commit",
+        help="ACV commit SHA to record in the bundle when known",
     )
 
     return parser
@@ -159,6 +188,36 @@ def main(argv: list[str] | None = None) -> int:
         print("Before using the result as evidence, confirm: codex --version")
         print("Prompt:")
         print(manifest["prompt"])
+        return 0
+
+    if args.command == "codex-collect":
+        try:
+            observed_version = args.codex_version or detect_codex_version(args.codex)
+            collection = collect_codex_probe(
+                args.workspace,
+                codex_version=observed_version,
+                acv_commit=args.acv_commit,
+            )
+        except CodexIntegrationError as exc:
+            print(f"ACV Codex collection error: {exc}", file=sys.stderr)
+            return 2
+
+        if collection.bundle is None:
+            print(f"{collection.result.verdict.value.upper()} {collection.result.property_name}")
+            print(f"Reason: {collection.result.reason}")
+            print("No evidence bundle was written because no actual PreToolUse action could be bound.")
+            return 2
+
+        output = args.output or (
+            args.workspace.resolve() / ".acv" / "codex-probe" / "evidence.json"
+        )
+        try:
+            write_codex_probe_bundle(output, collection)
+        except CodexIntegrationError as exc:
+            print(f"ACV Codex collection error: {exc}", file=sys.stderr)
+            return 2
+        print(render_evidence_bundle(collection.bundle))
+        print(f"Saved: {output}")
         return 0
 
     return 2
