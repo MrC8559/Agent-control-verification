@@ -23,6 +23,18 @@ This repository tests security controls, so development discipline is part of th
 - Security properties should return structured evidence, not only booleans.
 - Add a regression test for every fixed verification bug.
 
+## Writing style
+
+Public documentation should read like normal engineering work written by a person maintaining the project.
+
+- Use plain, direct sentences.
+- Do not use long dash punctuation. Use a full stop, colon, comma, or parentheses instead.
+- Avoid decorative arrow characters in prose. Use words or simple ASCII diagrams when a flow needs to be shown.
+- Avoid inflated marketing language, unnecessary slogans, and repetitive contrast formulas.
+- Avoid excessive bold text and formulaic headings.
+- Prefer concrete claims, exact limitations, versions, and evidence.
+- Do not imply certainty, maturity, standards compliance, or external validation that has not been demonstrated.
+
 ## Research discipline
 
 When adding a competitor, standard, or external claim to research notes:
