@@ -21,8 +21,10 @@ Goal: prove that the verifier can distinguish a secure control boundary from one
 - [x] Observe added/modified/deleted files independently across a subprocess boundary
 - [x] Catch a target that reports `DENY` after performing the file effect
 - [x] Return INCONCLUSIVE rather than PASS for malformed subprocess decision evidence
-- [ ] Bind approval to exact action fingerprint
-- [ ] Detect approval replay
+- [x] Bind approval to principal + session + tool + target + arguments
+- [x] Detect single-use approval replay
+- [x] Reject cross-identity, cross-session, and cross-tool approval reuse
+- [x] Verify approval freshness and make missing freshness/consumption evidence INCONCLUSIVE
 - [ ] Model control unavailable / timeout
 - [ ] Distinguish refusal from transport failure
 - [ ] Require explicit evidence for fail-open behavior

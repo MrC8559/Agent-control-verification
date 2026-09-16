@@ -17,7 +17,7 @@ The project is intentionally focused on **decision-to-effect verification**, not
 
 **Experimental / pre-alpha. Do not treat ACV output as a certification or security guarantee.**
 
-The current checkpoint combines a deterministic synthetic laboratory with the first out-of-process effect observer. A subprocess can now claim `DENY` while ACV independently snapshots a temporary filesystem before and after execution and catches the real mutation. No production agent, model provider, or third-party system is contacted.
+The current checkpoint combines a deterministic synthetic laboratory, an out-of-process filesystem effect observer, and a deterministic approval model for exact binding, freshness, and single-use replay. No production agent, model provider, human-approval system, or third-party system is contacted.
 
 ## Why this exists
 
@@ -69,6 +69,8 @@ A failing demo target is a **successful test of the verifier**, not a project fa
 
 The test suite also includes an out-of-process pair: one fixture really blocks a file write and another lies by returning `DENY` after writing anyway. ACV derives the verdict from the parent process's before/after filesystem evidence, not from the target's self-report.
 
+Approval tests separately cover exact semantic binding, cross-identity/session/tool misuse, post-approval argument mutation, expiry, single-use replay, and explicit INCONCLUSIVE outcomes when freshness or consumption evidence is missing.
+
 ## What is implemented
 
 The laboratory contains:
@@ -80,28 +82,26 @@ The laboratory contains:
 - observation of effects after a target runs;
 - an out-of-process filesystem observer using before/after SHA-256 snapshots;
 - a minimal JSON subprocess decision contract;
-- PASS / FAIL / INCONCLUSIVE handling for usable, violated, and missing decision evidence;
-- three security properties:
-  - `deny_prevents_effect`
-  - `allow_binds_exact_action`
-  - `consequential_effect_is_audited`
-- hardened and intentionally vulnerable demo targets;
+- approval binding over principal, session, tool, target, and arguments;
+- approval freshness checks using explicit issue/expiry/observation timestamps;
+- single-use approval replay verification with consumption evidence;
+- PASS / FAIL / INCONCLUSIVE handling when evidence is present, violated, or missing;
+- hardened and intentionally vulnerable demo/test cases;
 - deterministic unit tests;
 - GitHub Actions CI.
 
-See [`docs/PROCESS_BOUNDARY.md`](docs/PROCESS_BOUNDARY.md) for the exact trust boundary of the subprocess fixture. It is a deterministic test target, **not** a sandbox for arbitrary hostile code.
+See [`docs/PROCESS_BOUNDARY.md`](docs/PROCESS_BOUNDARY.md) for the exact trust boundary of the subprocess fixture and [`docs/APPROVAL_MODEL.md`](docs/APPROVAL_MODEL.md) for the approval evidence model.
 
 ## Intended direction
 
 The next phases are to add:
 
-1. approval binding and replay tests;
-2. fail-open / control-unavailable scenarios;
-3. identity and tool-scope checks;
-4. evidence bundles with reproducible environment metadata;
-5. adapters for real agent hosts and control planes;
-6. mappings to the OWASP Agentic Top 10 and Agent Control Standard;
-7. cross-version regression matrices for hosts, frameworks, and control layers.
+1. fail-open / control-unavailable / refusal-vs-timeout scenarios;
+2. stronger identity and tool-scope evidence;
+3. evidence bundles with reproducible environment metadata;
+4. adapters for real agent hosts and control planes;
+5. mappings to the OWASP Agentic Top 10 and Agent Control Standard;
+6. cross-version regression matrices for hosts, frameworks, and control layers.
 
 See [`docs/THREAT_MODEL.md`](docs/THREAT_MODEL.md), [`docs/RESEARCH.md`](docs/RESEARCH.md), and [`ROADMAP.md`](ROADMAP.md).
 
