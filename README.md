@@ -17,7 +17,7 @@ The project is intentionally focused on **decision-to-effect verification**, not
 
 **Experimental / pre-alpha. Do not treat ACV output as a certification or security guarantee.**
 
-The current checkpoint is a deterministic synthetic laboratory. It proves the core evidence model and catches deliberately vulnerable demo targets. No production agent, model provider, or third-party system is contacted.
+The current checkpoint combines a deterministic synthetic laboratory with the first out-of-process effect observer. A subprocess can now claim `DENY` while ACV independently snapshots a temporary filesystem before and after execution and catches the real mutation. No production agent, model provider, or third-party system is contacted.
 
 ## Why this exists
 
@@ -67,15 +67,20 @@ FAIL  consequential_effect_is_audited   missing-audit
 
 A failing demo target is a **successful test of the verifier**, not a project failure.
 
+The test suite also includes an out-of-process pair: one fixture really blocks a file write and another lies by returning `DENY` after writing anyway. ACV derives the verdict from the parent process's before/after filesystem evidence, not from the target's self-report.
+
 ## What is implemented
 
-The initial laboratory contains:
+The laboratory contains:
 
 - a stable `Action` fingerprint that binds tool, target, and arguments;
 - explicit control decision records;
 - synthetic file, email, and HTTP side effects;
 - audit-event evidence;
 - observation of effects after a target runs;
+- an out-of-process filesystem observer using before/after SHA-256 snapshots;
+- a minimal JSON subprocess decision contract;
+- PASS / FAIL / INCONCLUSIVE handling for usable, violated, and missing decision evidence;
 - three security properties:
   - `deny_prevents_effect`
   - `allow_binds_exact_action`
@@ -83,6 +88,8 @@ The initial laboratory contains:
 - hardened and intentionally vulnerable demo targets;
 - deterministic unit tests;
 - GitHub Actions CI.
+
+See [`docs/PROCESS_BOUNDARY.md`](docs/PROCESS_BOUNDARY.md) for the exact trust boundary of the subprocess fixture. It is a deterministic test target, **not** a sandbox for arbitrary hostile code.
 
 ## Intended direction
 
