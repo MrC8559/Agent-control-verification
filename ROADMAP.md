@@ -45,12 +45,14 @@ Goal: prove that the verifier can distinguish a secure control boundary from one
 ## v0.1.0: First real integration
 
 - [x] Select Codex CLI 0.154.0 as the first host ([Decision 0001](docs/decisions/0001-first-real-host-codex.md))
-- [ ] Build a narrow Codex native-hook adapter
+- [x] Build a narrow Codex native-hook adapter, disposable probe workspace, and evidence collector
 - [ ] Verify a denied `apply_patch` against independent filesystem state
 - [ ] Verify one allowed `apply_patch` and pair pre/post hook evidence
 - [ ] Measure one controlled hook-failure case and preserve the observed host posture
 - [ ] Document unsupported or untestable Codex tool paths explicitly
 - [ ] Publish a version-pinned evidence report without claiming certification
+
+The deterministic probe and collector are documented in [`docs/CODEX_PROBE.md`](docs/CODEX_PROBE.md). The remaining v0.1.0 items require captured evidence from a real Codex `0.154.0` run.
 
 ## Later
 
