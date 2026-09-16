@@ -28,15 +28,18 @@ Goal: prove that the verifier can distinguish a secure control boundary from one
 - [x] Model control unavailable and timeout cases
 - [x] Distinguish policy deny, security refusal, timeout, transport loss, and malformed response
 - [x] Require explicit invocation and effect evidence for fail-open behaviour
-- [ ] Add a stable `PASS` / `FAIL` / `INCONCLUSIVE` JSON report schema
+- [x] Add a stable `PASS` / `FAIL` / `INCONCLUSIVE` JSON report schema
 
 ## v0.0.3: Evidence bundles
 
-- [ ] Reproducible run manifest
-- [ ] Host, framework, and control versions
-- [ ] Environment fingerprint
-- [ ] Ordered decision, invocation, and effect trace
-- [ ] Redacted evidence export
+- [x] Versioned reproducible evidence artifact
+- [x] Host, framework, target, and control version fields
+- [x] Environment metadata
+- [x] Explicit missing-evidence fields
+- [x] Redacted-by-default evidence export
+- [x] Bundle integrity digest and validation
+- [x] Independent saved-bundle renderer
+- [ ] Populate ordered decision, invocation, and effect traces from a real observable source
 - [ ] JUnit or SARIF output where semantically appropriate
 
 ## v0.1.0: First real integration

@@ -26,3 +26,7 @@ jobs:
         run: python -m unittest discover -s tests -v
       - name: Deterministic demo
         run: python -m agent_control_verification demo
+      - name: Evidence bundle handoff
+        run: |
+          python -m agent_control_verification evidence-demo --output /tmp/acv-evidence.json
+          python -m agent_control_verification render-evidence /tmp/acv-evidence.json

@@ -1,0 +1,141 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:acv:evidence-bundle:0.1",
+  "title": "Agent Control Verification evidence bundle",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "bundle_id",
+    "created_at",
+    "producer",
+    "scenario",
+    "components",
+    "action",
+    "control",
+    "evidence",
+    "environment",
+    "privacy",
+    "result",
+    "integrity"
+  ],
+  "properties": {
+    "schema_version": {"const": "acv-evidence-0.1"},
+    "bundle_id": {"type": "string", "minLength": 1},
+    "created_at": {"type": "string", "format": "date-time"},
+    "producer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "version", "commit"],
+      "properties": {
+        "name": {"const": "agent-control-verification"},
+        "version": {"type": "string", "minLength": 1},
+        "commit": {"type": ["string", "null"], "minLength": 1}
+      }
+    },
+    "scenario": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "property"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "property": {"type": "string", "minLength": 1}
+      }
+    },
+    "components": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["role", "name", "version", "commit"],
+        "properties": {
+          "role": {"enum": ["target", "host", "control", "model", "framework"]},
+          "name": {"type": "string", "minLength": 1},
+          "version": {"type": ["string", "null"], "minLength": 1},
+          "commit": {"type": ["string", "null"], "minLength": 1}
+        }
+      }
+    },
+    "action": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["fingerprint"],
+      "properties": {
+        "fingerprint": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "control": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["decision", "reason_code", "reason_digest"],
+      "properties": {
+        "decision": {"enum": ["allow", "deny", "ask", "defer", "error", "unknown"]},
+        "reason_code": {"type": ["string", "null"], "minLength": 1},
+        "reason_digest": {"oneOf": [{"$ref": "#/$defs/sha256"}, {"type": "null"}]}
+      }
+    },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["invocation_fingerprints", "effect_fingerprints", "audit_refs", "missing", "timeline"],
+      "properties": {
+        "invocation_fingerprints": {"type": "array", "items": {"$ref": "#/$defs/sha256"}},
+        "effect_fingerprints": {"type": "array", "items": {"$ref": "#/$defs/sha256"}},
+        "audit_refs": {"type": "array", "items": {"type": "string", "minLength": 1}},
+        "missing": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+        "timeline": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["sequence", "kind", "ref", "timestamp"],
+            "properties": {
+              "sequence": {"type": "integer", "minimum": 0},
+              "kind": {"enum": ["decision", "approval", "invocation", "effect", "audit", "control_failure"]},
+              "ref": {"type": "string", "minLength": 1},
+              "timestamp": {"type": ["string", "null"], "format": "date-time"}
+            }
+          }
+        }
+      }
+    },
+    "environment": {
+      "type": "object",
+      "additionalProperties": {"type": "string", "minLength": 1}
+    },
+    "privacy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["raw_payloads_included", "redactions", "canary_ids"],
+      "properties": {
+        "raw_payloads_included": {"const": false},
+        "redactions": {"type": "array", "items": {"type": "string", "minLength": 1}},
+        "canary_ids": {"type": "array", "items": {"type": "string", "minLength": 1}}
+      }
+    },
+    "result": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["verdict", "reason"],
+      "properties": {
+        "verdict": {"enum": ["pass", "fail", "inconclusive"]},
+        "reason": {"type": "string", "minLength": 1}
+      }
+    },
+    "integrity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["algorithm", "digest"],
+      "properties": {
+        "algorithm": {"const": "sha256"},
+        "digest": {"$ref": "#/$defs/sha256"}
+      }
+    }
+  },
+  "$defs": {
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    }
+  }
+}
