@@ -17,9 +17,11 @@ The project focuses on decision-to-effect verification. It is not intended to be
 
 Experimental and pre-alpha. ACV output is not a certification or security guarantee.
 
-The current implementation includes a deterministic synthetic laboratory, an out-of-process filesystem effect observer, approval and control-failure models, and a versioned evidence bundle format. No production agent, model provider, human-approval system, or third-party service is contacted by the default test suite.
+The current implementation includes a deterministic synthetic laboratory, an out-of-process filesystem effect observer, approval and control-failure models, a versioned evidence bundle format, and a narrow Codex CLI `0.154.0` native-hook probe for `apply_patch`.
 
-Codex CLI `0.154.0` is the selected first real host integration. The selection and scope are documented in [Decision 0001](docs/decisions/0001-first-real-host-codex.md). The real-host adapter is not implemented yet.
+The Codex probe can prepare a disposable workspace, record redacted `PreToolUse` and `PostToolUse` evidence, and collect the result against an independently read marker file. No live Codex evidence report has been published yet. The default test suite does not contact a production agent, model provider, human-approval system, or third-party service.
+
+Codex CLI `0.154.0` is the selected first real host integration. The selection and scope are documented in [Decision 0001](docs/decisions/0001-first-real-host-codex.md), and the runnable probe workflow is documented in [CODEX_PROBE.md](docs/CODEX_PROBE.md).
 
 ## Why this exists
 
@@ -91,7 +93,9 @@ The current laboratory includes:
 - explicit control-failure cause and posture evidence;
 - versioned JSON evidence bundles with integrity validation;
 - `PASS`, `FAIL`, and `INCONCLUSIVE` results;
-- deterministic regression tests and GitHub Actions CI.
+- deterministic regression tests and GitHub Actions CI;
+- a Codex `0.154.0` `apply_patch` hook adapter with redacted pre/post evidence;
+- a disposable Codex probe workspace generator and evidence collector.
 
 Relevant design notes:
 
@@ -101,6 +105,7 @@ Relevant design notes:
 - [`docs/EVIDENCE_BUNDLE.md`](docs/EVIDENCE_BUNDLE.md)
 - [`docs/THREAT_MODEL.md`](docs/THREAT_MODEL.md)
 - [`docs/RESEARCH.md`](docs/RESEARCH.md)
+- [`docs/CODEX_PROBE.md`](docs/CODEX_PROBE.md)
 - [`docs/decisions/0001-first-real-host-codex.md`](docs/decisions/0001-first-real-host-codex.md)
 
 The machine-readable schema is [`schemas/evidence-bundle.schema.json`](schemas/evidence-bundle.schema.json).
@@ -109,11 +114,12 @@ The machine-readable schema is [`schemas/evidence-bundle.schema.json`](schemas/e
 
 The next planned steps are:
 
-1. build the narrow Codex `0.154.0` native-hook adapter;
-2. verify denied and allowed `apply_patch` effects against independent filesystem state;
-3. capture a controlled Codex hook-failure case in an ACV evidence bundle;
+1. run the deny probe against an actual Codex CLI `0.154.0` session and verify the marker file independently;
+2. run the matching allow case and pair pre/post evidence with the observed file effect;
+3. capture one controlled Codex hook-failure case and preserve the observed host posture;
 4. document which Codex tool paths were actually observed and which remain untested;
-5. add other hosts only after the first real integration produces reproducible evidence.
+5. publish a version-pinned evidence report without claiming certification;
+6. add other hosts only after the first real integration produces reproducible evidence.
 
 See [`ROADMAP.md`](ROADMAP.md) for the current sequence.
 
