@@ -1,50 +1,46 @@
 # Agent Control Verification
 
-> **Verify that AI-agent security decisions are enforced at the point of effect.**
+> Verify that AI-agent security decisions are enforced at the point of effect.
 
-Agent Control Verification (ACV) is an early-stage open-source research project for testing a simple but important proposition:
+Agent Control Verification (ACV) is an early-stage open-source research project for testing a simple security property:
 
-> A security control saying **DENY** is not evidence that the prohibited effect did not happen.
+> A control reporting `DENY` does not, by itself, prove that the prohibited effect was prevented.
 
-ACV is being built to observe both sides of an agent control boundary:
+ACV records two separate evidence sources:
 
-1. **What the control decided** — allow, deny, ask, defer, or error.
-2. **What the environment actually did** — file mutation, message send, network request, secret access, or another consequential effect.
+1. What the control decided: allow, deny, ask, defer, or error.
+2. What the environment actually did: file mutation, message send, network request, secret access, or another consequential effect.
 
-The project is intentionally focused on **decision-to-effect verification**, not on building another generic prompt-injection scanner.
+The project focuses on decision-to-effect verification. It is not intended to be a generic prompt-injection scanner.
 
 ## Status
 
-**Experimental / pre-alpha. Do not treat ACV output as a certification or security guarantee.**
+Experimental and pre-alpha. ACV output is not a certification or security guarantee.
 
-The current checkpoint combines a deterministic synthetic laboratory, an out-of-process filesystem effect observer, and a deterministic approval model for exact binding, freshness, and single-use replay. No production agent, model provider, human-approval system, or third-party system is contacted.
+The current implementation includes a deterministic synthetic laboratory, an out-of-process filesystem effect observer, a deterministic approval model, and a control-failure posture model. No production agent, model provider, human-approval system, or third-party service is contacted by the default test suite.
 
 ## Why this exists
 
-Agent security tooling is rapidly expanding, including red-team harnesses, runtime gateways, policy engines, and emerging control standards. Those are valuable, but they create a second-order question:
-
-**How do we verify that the control itself actually controlled the effect?**
-
-Examples:
+Agent systems can fail between a control decision and the resulting tool effect. Examples include:
 
 - a hook reports `DENY`, but a tool still runs;
-- an approved action is mutated after approval but before execution;
-- an approval is replayed for a second invocation;
-- a control becomes unavailable and the host silently proceeds;
-- the action happens, but the audit trail does not record it;
-- a decision applies to one identity or tool but is reused by another.
+- an approved action is changed before execution;
+- an approval is replayed for a later invocation;
+- a control becomes unavailable and the host proceeds;
+- an action occurs without matching audit evidence;
+- authority for one identity, session, or tool is reused by another.
 
-ACV aims to make those properties reproducible and testable.
+ACV turns these cases into explicit, reproducible properties.
 
-## First principles
+## Principles
 
-- **Observe effects, not claims.**
-- **PASS requires evidence.**
-- **Unknown evidence becomes INCONCLUSIVE, not PASS.**
-- **Security decisions should be bound to the exact action they authorize.**
-- **Tests should be deterministic before they become model-dependent.**
-- **Synthetic environments first; no accidental real-world side effects.**
-- **Standards mappings are references, not claims of certification.**
+- Observe effects independently where the environment allows it.
+- Require evidence for `PASS`.
+- Return `INCONCLUSIVE` when evidence is missing or contradictory.
+- Bind authorization to the exact action and authority scope.
+- Prefer deterministic tests before model-dependent tests.
+- Use synthetic local effects by default.
+- Treat standards as references unless external conformance has actually been established.
 
 ## Quick start
 
@@ -56,7 +52,7 @@ python -m agent_control_verification demo
 python -m unittest discover -s tests -v
 ```
 
-The demo intentionally includes both secure and insecure implementations. Example output contains results such as:
+The demo contains secure and deliberately vulnerable implementations. Typical results include:
 
 ```text
 PASS  deny_prevents_effect   hardened-deny
@@ -65,64 +61,68 @@ FAIL  allow_binds_exact_action   mutate-after-allow
 FAIL  consequential_effect_is_audited   missing-audit
 ```
 
-A failing demo target is a **successful test of the verifier**, not a project failure.
+A failing vulnerable fixture is expected. Its purpose is to prove that the verifier can detect the violation.
 
-The test suite also includes an out-of-process pair: one fixture really blocks a file write and another lies by returning `DENY` after writing anyway. ACV derives the verdict from the parent process's before/after filesystem evidence, not from the target's self-report.
+The process-boundary tests include a target that returns `DENY` after writing a file. ACV derives the verdict from the parent process's before/after filesystem evidence rather than the target's own effect report.
 
-Approval tests separately cover exact semantic binding, cross-identity/session/tool misuse, post-approval argument mutation, expiry, single-use replay, and explicit INCONCLUSIVE outcomes when freshness or consumption evidence is missing.
+Approval tests cover exact semantic binding, cross-identity/session/tool misuse, post-approval argument mutation, expiry, single-use replay, and explicit `INCONCLUSIVE` outcomes when freshness or consumption evidence is missing.
 
-## What is implemented
+Control-failure tests distinguish policy denial, explicit security refusal, timeout, transport loss, and malformed responses. A configured fail-open posture is recorded as evidence. It does not turn ungoverned execution into `PASS`.
 
-The laboratory contains:
+## Implemented properties
 
-- a stable `Action` fingerprint that binds tool, target, and arguments;
+The current laboratory includes:
+
+- stable action fingerprints;
 - explicit control decision records;
-- synthetic file, email, and HTTP side effects;
+- synthetic file, email, and HTTP effects;
 - audit-event evidence;
-- observation of effects after a target runs;
-- an out-of-process filesystem observer using before/after SHA-256 snapshots;
+- out-of-process filesystem observation using SHA-256 snapshots;
 - a minimal JSON subprocess decision contract;
 - approval binding over principal, session, tool, target, and arguments;
-- approval freshness checks using explicit issue/expiry/observation timestamps;
-- single-use approval replay verification with consumption evidence;
-- PASS / FAIL / INCONCLUSIVE handling when evidence is present, violated, or missing;
-- hardened and intentionally vulnerable demo/test cases;
-- deterministic unit tests;
-- GitHub Actions CI.
+- approval freshness checks;
+- single-use approval replay verification;
+- explicit control-failure cause and posture evidence;
+- `PASS`, `FAIL`, and `INCONCLUSIVE` results;
+- deterministic regression tests and GitHub Actions CI.
 
-See [`docs/PROCESS_BOUNDARY.md`](docs/PROCESS_BOUNDARY.md) for the exact trust boundary of the subprocess fixture and [`docs/APPROVAL_MODEL.md`](docs/APPROVAL_MODEL.md) for the approval evidence model.
+Relevant design notes:
 
-## Intended direction
+- [`docs/PROCESS_BOUNDARY.md`](docs/PROCESS_BOUNDARY.md)
+- [`docs/APPROVAL_MODEL.md`](docs/APPROVAL_MODEL.md)
+- [`docs/FAILURE_POSTURE.md`](docs/FAILURE_POSTURE.md)
+- [`docs/THREAT_MODEL.md`](docs/THREAT_MODEL.md)
+- [`docs/RESEARCH.md`](docs/RESEARCH.md)
 
-The next phases are to add:
+## Next work
 
-1. fail-open / control-unavailable / refusal-vs-timeout scenarios;
-2. stronger identity and tool-scope evidence;
-3. evidence bundles with reproducible environment metadata;
-4. adapters for real agent hosts and control planes;
-5. mappings to the OWASP Agentic Top 10 and Agent Control Standard;
-6. cross-version regression matrices for hosts, frameworks, and control layers.
+The next planned steps are:
 
-See [`docs/THREAT_MODEL.md`](docs/THREAT_MODEL.md), [`docs/RESEARCH.md`](docs/RESEARCH.md), and [`ROADMAP.md`](ROADMAP.md).
+1. define a stable JSON evidence/report schema;
+2. strengthen identity and tool-scope evidence;
+3. create reproducible evidence bundles;
+4. select the first real agent host/control integration;
+5. map implemented properties to relevant OWASP agent-security work;
+6. add version-pinned regression matrices for real hosts and control layers.
 
-## Relationship to existing work
+See [`ROADMAP.md`](ROADMAP.md) for the current sequence.
 
-ACV is deliberately adjacent to — not a replacement for — projects such as:
+## Related work
+
+ACV is adjacent to projects such as:
 
 - [OWASP Agent Security Regression Harness](https://github.com/OWASP/Agent-Security-Regression-Harness)
 - [OWASP Agent Control Standard](https://github.com/GenAI-Security-Project/agent-control-standard)
 - [OWASP Top 10 for Agentic Applications](https://genai.owasp.org/resource/owasp-top-10-for-agentic-applications-for-2026/)
 - [AgentCanary](https://github.com/antgroup/Agent3Sigma-Canary)
 
-Those projects helped narrow ACV's thesis toward verification of the **decision/execution/effect boundary**.
-
-This repository is independent and is not an OWASP project or an assertion of OWASP conformance.
+ACV is independent. It is not an OWASP project and does not currently claim OWASP or ACS conformance.
 
 ## Safety boundary
 
 The repository must remain safe to clone and run.
 
-Tests must default to local synthetic resources. Do not add code that attacks third-party systems, exfiltrates real secrets, scans public targets without authorization, or makes live consequential calls by default.
+Default tests use local synthetic resources. Do not add code that attacks third-party systems, exfiltrates real secrets, scans public targets without authorization, or performs live consequential actions by default.
 
 ## License
 
