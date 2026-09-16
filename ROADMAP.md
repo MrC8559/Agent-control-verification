@@ -16,8 +16,11 @@ Goal: prove that the verifier can distinguish a secure control boundary from one
 - [x] Vulnerable and hardened demo targets
 - [x] Deterministic tests and CI
 
-## v0.0.2: approvals and failure posture
+## v0.0.2: independent effects, approvals and failure posture
 
+- [x] Observe added/modified/deleted files independently across a subprocess boundary
+- [x] Catch a target that reports `DENY` after performing the file effect
+- [x] Return INCONCLUSIVE rather than PASS for malformed subprocess decision evidence
 - [ ] Bind approval to exact action fingerprint
 - [ ] Detect approval replay
 - [ ] Model control unavailable / timeout
