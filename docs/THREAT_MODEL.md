@@ -12,15 +12,15 @@ The verifier treats the **decision plane** and the **effect plane** as separate 
 
 ## Primary trust boundaries
 
-### 1. Agent → control layer
+### 1. Agent to control layer
 
 The agent proposes an action. Risks include malformed inputs, identity confusion, missing hooks, and intentionally adversarial arguments.
 
-### 2. Control layer → host/runtime
+### 2. Control layer to host/runtime
 
 The control returns allow/deny/ask/defer/error. Risks include dropped decisions, incorrect failure posture, competing hooks, or host-specific interpretation differences.
 
-### 3. Decision → invocation
+### 3. Decision to invocation
 
 This is the initial ACV wedge. Risks include:
 
@@ -30,11 +30,11 @@ This is the initial ACV wedge. Risks include:
 - changing the tool or target after approval;
 - losing identity or provenance between control and tool.
 
-### 4. Invocation → effect
+### 4. Invocation to effect
 
 A tool invocation is not necessarily evidence that the effect occurred. Outcomes may be successful, failed, partially applied, duplicated, or unknown.
 
-### 5. Effect → audit evidence
+### 5. Effect to audit evidence
 
 The audit trail may omit the action, record different arguments, misattribute identity, or claim success without independently observable evidence.
 
@@ -91,8 +91,8 @@ We do **not** initially assume compromise of the operating system or hypervisor 
 
 The verifier uses three verdicts:
 
-- **PASS** — available evidence establishes the tested property.
-- **FAIL** — available evidence falsifies the property.
-- **INCONCLUSIVE** — the environment did not expose enough evidence to establish either.
+- **PASS:** available evidence establishes the tested property.
+- **FAIL:** available evidence falsifies the property.
+- **INCONCLUSIVE:** the environment did not expose enough evidence to establish either.
 
 `INCONCLUSIVE` is a first-class result, not a softer PASS.

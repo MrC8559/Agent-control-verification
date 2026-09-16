@@ -18,7 +18,7 @@ Repository: https://github.com/OWASP/Agent-Security-Regression-Harness
 
 The project already covers executable agent-security scenarios, traces, adapters, and CI-oriented regression testing. That makes a generic "agent security tests in CI" clone a weak thesis.
 
-**Implication for ACV:** specialize in the decision → invocation → effect boundary and integrate with scenario harnesses rather than duplicating them.
+**Implication for ACV:** specialize in the decision, invocation, and effect boundary and integrate with scenario harnesses rather than duplicating them.
 
 ### OWASP Agent Control Standard
 
@@ -50,14 +50,10 @@ A useful developer workflow could eventually be:
 
 ```text
 change agent / model / host / policy
-             ↓
-run control-verification suite
-             ↓
-capture decision + invocation + effect evidence
-             ↓
-PASS / FAIL / INCONCLUSIVE
-             ↓
-block regressions in CI
+then run the control-verification suite
+then capture decision + invocation + effect evidence
+then return PASS / FAIL / INCONCLUSIVE
+then block regressions in CI
 ```
 
 A future hosted product could retain private evidence, compare versions, run controlled matrices, and provide audit exports. That is a hypothesis, not current product-market-fit evidence.

@@ -2,7 +2,7 @@
 
 The roadmap is evidence-led. A milestone is not complete because the code exists; it is complete when the security property can be demonstrated reproducibly.
 
-## v0.0.1 — decision/effect proof
+## v0.0.1: decision/effect proof
 
 Goal: prove that the verifier can distinguish a secure control boundary from one that only *claims* to block an action.
 
@@ -16,7 +16,7 @@ Goal: prove that the verifier can distinguish a secure control boundary from one
 - [x] Vulnerable and hardened demo targets
 - [x] Deterministic tests and CI
 
-## v0.0.2 — approvals and failure posture
+## v0.0.2: approvals and failure posture
 
 - [ ] Bind approval to exact action fingerprint
 - [ ] Detect approval replay
@@ -25,16 +25,16 @@ Goal: prove that the verifier can distinguish a secure control boundary from one
 - [ ] Require explicit evidence for fail-open behavior
 - [ ] Add PASS / FAIL / INCONCLUSIVE JSON report schema
 
-## v0.0.3 — evidence bundles
+## v0.0.3: evidence bundles
 
 - [ ] Reproducible run manifest
 - [ ] Host/framework/control versions
 - [ ] Environment fingerprint
-- [ ] Ordered decision → invocation → effect trace
+- [ ] Ordered decision, invocation, and effect trace
 - [ ] Redacted evidence export
 - [ ] JUnit/SARIF output where semantically appropriate
 
-## v0.1.0 — first real integration
+## v0.1.0: first real integration
 
 - [ ] Select one real agent host/control boundary
 - [ ] Build a narrow adapter

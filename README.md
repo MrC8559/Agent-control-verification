@@ -8,8 +8,8 @@ Agent Control Verification (ACV) is an early-stage open-source research project 
 
 ACV is being built to observe both sides of an agent control boundary:
 
-1. **What the control decided** — allow, deny, ask, defer, or error.
-2. **What the environment actually did** — file mutation, message send, network request, secret access, or another consequential effect.
+1. **What the control decided:** allow, deny, ask, defer, or error.
+2. **What the environment actually did:** file mutation, message send, network request, secret access, or another consequential effect.
 
 The project is intentionally focused on **decision-to-effect verification**, not on building another generic prompt-injection scanner.
 
@@ -100,7 +100,7 @@ See [`docs/THREAT_MODEL.md`](docs/THREAT_MODEL.md), [`docs/RESEARCH.md`](docs/RE
 
 ## Relationship to existing work
 
-ACV is deliberately adjacent to — not a replacement for — projects such as:
+ACV is designed to complement, not replace, projects such as:
 
 - [OWASP Agent Security Regression Harness](https://github.com/OWASP/Agent-Security-Regression-Harness)
 - [OWASP Agent Control Standard](https://github.com/GenAI-Security-Project/agent-control-standard)
