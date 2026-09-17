@@ -1,6 +1,6 @@
 # Research checkpoint
 
-Checked: 2026-09-16
+Checked: 2026-09-17
 
 ## Thesis
 
@@ -43,6 +43,20 @@ Repository: https://github.com/antgroup/Agent3Sigma-Canary
 AgentCanary evaluates agents in controlled environments with real tool trajectories.
 
 Controlled environments are clearly useful. ACV should remain focused on control-plane enforcement evidence rather than broad agent capability or safety benchmarking.
+
+### Action-integrity and outcome-verification projects
+
+The phrase **agent action integrity** is descriptive language already used elsewhere in the 2026 agent-security ecosystem. ACV and the Agent Action Integrity Observatory do not claim to have originated the term.
+
+AegisAgent uses "Agent Action Integrity" for an integrity and provenance layer that binds approvals to actions and extends into an agent security-operations surface:
+
+https://github.com/lavkushry/AegisAgent/blob/main/docs/AegisAgent_Product_Research.md
+
+Postcept describes "Agent Action Integrity" as deterministic outcome verification against systems of record, producing signed proof-of-completion receipts:
+
+https://postcept.com/about
+
+These projects are close enough that ACV should state the distinction explicitly. ACV is not currently a runtime authorization gateway, SOC, or business-workflow completion service. Its narrower research focus is independent verification of whether a control decision, invocation evidence, and observed consequential effect agree for a specific host, version, execution path, and falsifiable property. If another project demonstrates equivalent independent effect-boundary verification across the same surfaces with comparable evidence, ACV's differentiation should be reconsidered rather than asserted.
 
 ## Product hypothesis
 
