@@ -30,3 +30,7 @@ jobs:
         run: |
           python -m agent_control_verification evidence-demo --output /tmp/acv-evidence.json
           python -m agent_control_verification render-evidence /tmp/acv-evidence.json
+      - name: macOS/Linux helper syntax
+        run: |
+          bash -n scripts/prepare-first-codex-probe.sh
+          bash scripts/prepare-first-codex-probe.sh --help >/tmp/acv-codex-helper-help.txt
