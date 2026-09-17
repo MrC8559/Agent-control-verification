@@ -1,4 +1,5 @@
 from datetime import datetime, timezone
+import hashlib
 import json
 from pathlib import Path
 import tempfile
@@ -112,6 +113,77 @@ class CodexEvidenceGuardTests(unittest.TestCase):
 
             self.assertEqual(collection.result.verdict, Verdict.INCONCLUSIVE)
             self.assertIn("unexpected_post_tool_use_record", collection.bundle["evidence"]["missing"])
+            validate_evidence_bundle(collection.bundle)
+
+    def test_strict_bundle_preserves_redacted_host_and_runtime_provenance(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            workspace = Path(tmp) / "probe"
+            paths = prepare_codex_probe(workspace, pre_mode="deny", python_executable="python")
+            self._record(
+                paths.log_file,
+                payload(workspace, "PreToolUse", "call-1"),
+                "deny",
+                T0,
+            )
+
+            collection = collect_codex_probe_strict(
+                workspace,
+                codex_version=CODEX_TARGET_VERSION,
+            )
+
+            self.assertEqual(collection.result.verdict, Verdict.PASS)
+            self.assertIsNotNone(collection.bundle)
+            validate_evidence_bundle(collection.bundle)
+
+            model_components = [
+                component
+                for component in collection.bundle["components"]
+                if component["role"] == "model"
+            ]
+            self.assertEqual(len(model_components), 1)
+            self.assertEqual(model_components[0]["name"], "test-model")
+
+            audit_refs = collection.bundle["evidence"]["audit_refs"]
+            self.assertTrue(any(ref.startswith("codex-session:sha256:") for ref in audit_refs))
+            self.assertTrue(any(ref.startswith("codex-turn:sha256:") for ref in audit_refs))
+
+            environment = collection.bundle["environment"]
+            self.assertTrue(environment["python_implementation"])
+            self.assertTrue(environment["python_version"])
+            self.assertEqual(environment["codex_permission_mode"], "default")
+            self.assertEqual(
+                environment["hook_config_sha256_collected"],
+                hashlib.sha256(paths.hooks_file.read_bytes()).hexdigest(),
+            )
+            self.assertEqual(len(environment["hook_adapter_sha256_collected"]), 64)
+            self.assertEqual(len(environment["hook_entrypoint_sha256_collected"]), 64)
+
+    def test_missing_collected_hook_config_digest_is_explicit(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            workspace = Path(tmp) / "probe"
+            paths = prepare_codex_probe(workspace, pre_mode="deny", python_executable="python")
+            self._record(
+                paths.log_file,
+                payload(workspace, "PreToolUse", "call-1"),
+                "deny",
+                T0,
+            )
+            paths.hooks_file.unlink()
+
+            collection = collect_codex_probe_strict(
+                workspace,
+                codex_version=CODEX_TARGET_VERSION,
+            )
+
+            self.assertEqual(collection.result.verdict, Verdict.PASS)
+            self.assertIn(
+                "hook_config_sha256_collected",
+                collection.bundle["evidence"]["missing"],
+            )
+            self.assertNotIn(
+                "hook_config_sha256_collected",
+                collection.bundle["environment"],
+            )
             validate_evidence_bundle(collection.bundle)
 
 
