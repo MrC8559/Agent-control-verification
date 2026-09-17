@@ -76,3 +76,59 @@ We should change direction if evidence shows that:
 - How should approval replay and TOCTOU mutation be represented?
 - Which ACS requirements are observable from outside the control component?
 - Can evidence bundles remain useful while redacting user data and secrets?
+
+## 2026-09-17 control-boundary sweep
+
+This sweep looked for failure modes that remain close to ACV's thesis and can plausibly be measured with independent evidence. It deliberately did not turn every upstream bug report into an ACV feature.
+
+### Existing ACV choices were reinforced
+
+The OWASP Agent Control Standard v0.1.0 now has a public reference implementation. Its own README documents a default `proceed` failure posture when the Guardian crashes, hangs, or is unreachable unless fail-closed behavior is configured. That is strong evidence that ACV's separation of control failure, invocation evidence, and observed effect addresses a real design boundary.
+
+Source: https://github.com/GenAI-Security-Project/agent-control-standard
+
+This does not establish ACS conformance for ACV and does not establish a vulnerability in ACS. It reinforces the value of measuring failure posture explicitly instead of treating control availability as proof of enforcement.
+
+### Five post-v0.1.0 properties are worth preserving
+
+1. **Control-authorized modification binding.** ACS exposes `modify` as a first-class decision, and real host hooks can rewrite tool input. ACV needs to distinguish an explicitly authorized rewrite from an unauthorized mutation after approval. Tracked in #20.
+2. **Deny persistence across retry and escalation.** A host can record a deny correctly and still later route the same action through retry, sandbox escalation, or approval logic. One Codex report on version `0.144.6` demonstrates why the state transition itself needs verification. Tracked in #21.
+3. **Delegation scope and attribution.** Reports across Claude Code, OpenCode, and Codex show that subagent control coverage and parent-child correlation are difficult to assume safely. Recent authorization research independently identifies scope propagation and principal chains as central gaps. Tracked in #22.
+4. **Control-plane integrity.** A hook or policy is not a reliable control boundary if the governed agent can silently weaken the active configuration that produces later decisions. ACV should distinguish control provenance from control integrity. Tracked in #23.
+5. **MCP credential boundary effects.** The MCP `2026-07-28` authorization guidance explicitly requires resource-bound tokens and forbids inbound-token passthrough to upstream APIs. Both properties can be tested safely with synthetic localhost services and independently observed downstream requests. Tracked in #24.
+
+### Sources that shaped those issues
+
+- ACS v0.1.0: https://github.com/GenAI-Security-Project/agent-control-standard
+- Claude Code hooks guide: https://code.claude.com/docs/en/hooks-guide
+- Codex retry/escalation report: https://github.com/openai/codex/issues/39872
+- Codex spawn correlation proposal: https://github.com/openai/codex/issues/44095
+- Claude Code subagent enforcement reports: https://github.com/anthropics/claude-code/issues/21460 and https://github.com/anthropics/claude-code/issues/67424
+- OpenCode subagent hook report: https://github.com/anomalyco/opencode/issues/5894
+- Claude Code control self-modification report: https://github.com/anthropics/claude-code/issues/32376
+- MCP authorization security considerations: https://github.com/modelcontextprotocol/modelcontextprotocol/blob/main/docs/specification/2026-07-28/basic/authorization/security-considerations.mdx
+- MCP security best practices: https://github.com/modelcontextprotocol/modelcontextprotocol/blob/main/docs/docs/2026-07-28/tutorials/security/security_best_practices.mdx
+- Authorization architectures review, 2026-09-14: https://arxiv.org/abs/2609.15906
+- Delegation-security research: https://arxiv.org/abs/2608.15888
+
+Upstream issue reports are evidence that a property is worth measuring. They are not treated as proof that another version, platform, or host has the same behavior.
+
+### Lower-priority signal to monitor
+
+Codex issue #32573 reports that a host can block an action while still rendering raw tool input after a sanitized denial reason. This suggests a possible future end-to-end redaction property, but it is currently secondary to ACV's authorization and effect boundary.
+
+Source: https://github.com/openai/codex/issues/32573
+
+Do not expand the immediate roadmap for it unless evidence privacy becomes a concrete blocker for publishing or consuming ACV artifacts.
+
+### Suggested order after v0.1.0
+
+The issues are research candidates, not commitments. If the first real-host milestone succeeds, the smallest useful sequence currently looks like:
+
+1. #20, because explicit modification semantics extend ACV's existing exact-action model without requiring another host;
+2. #21, because retry and escalation can be measured on the same host family as the first integration;
+3. #23, because control integrity determines whether later host-level conclusions are meaningful;
+4. #22, once a host exposes enough subagent correlation to avoid heuristic attribution;
+5. #24, as a separate synthetic MCP authorization boundary experiment.
+
+The sequence should change if live evidence shows a more important gap.
