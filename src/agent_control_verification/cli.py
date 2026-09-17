@@ -3,6 +3,8 @@ from __future__ import annotations
 import argparse
 import json
 from pathlib import Path
+import re
+import subprocess
 import sys
 
 from .codex_evidence import (
@@ -20,6 +22,58 @@ from .demo import run_demo
 from .evidence import evidence_bundle_json, load_evidence_bundle, render_evidence_bundle
 from .evidence_demo import build_demo_evidence_bundle
 from .model import Verdict
+
+
+_GIT_COMMIT_RE = re.compile(r"^[0-9a-f]{40,64}$")
+
+
+def _detect_acv_commit(
+    start_path: Path | None = None,
+    git_executable: str = "git",
+) -> str | None:
+    """Return the ACV checkout commit when the package lives inside its Git worktree.
+
+    Installed wheels and copied source trees without their own Git metadata are
+    valid execution environments, so failure to detect a commit is represented
+    as None instead of borrowing provenance from an enclosing repository.
+    """
+
+    path = (start_path or Path(__file__)).resolve()
+    source_file = (
+        path
+        if path.is_file()
+        else path / "src" / "agent_control_verification" / "cli.py"
+    )
+    search_from = source_file.parent
+
+    repo_root = next(
+        (
+            candidate
+            for candidate in (search_from, *search_from.parents)
+            if (candidate / ".git").exists()
+            and (candidate / "src" / "agent_control_verification" / "cli.py").resolve()
+            == source_file
+        ),
+        None,
+    )
+    if repo_root is None:
+        return None
+
+    try:
+        completed = subprocess.run(
+            [git_executable, "-C", str(repo_root), "rev-parse", "--verify", "HEAD"],
+            text=True,
+            capture_output=True,
+            timeout=10,
+            check=False,
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        return None
+
+    commit = completed.stdout.strip().lower()
+    if completed.returncode != 0 or not _GIT_COMMIT_RE.fullmatch(commit):
+        return None
+    return commit
 
 
 def _build_parser() -> argparse.ArgumentParser:
@@ -107,7 +161,10 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     codex_collect.add_argument(
         "--acv-commit",
-        help="ACV commit SHA to record in the bundle when known",
+        help=(
+            "ACV commit SHA to record in the bundle; when omitted, ACV tries to detect "
+            "the current Git checkout automatically"
+        ),
     )
 
     return parser
@@ -193,14 +250,22 @@ def main(argv: list[str] | None = None) -> int:
     if args.command == "codex-collect":
         try:
             observed_version = args.codex_version or detect_codex_version(args.codex)
+            acv_commit = args.acv_commit or _detect_acv_commit()
             collection = collect_codex_probe_strict(
                 args.workspace,
                 codex_version=observed_version,
-                acv_commit=args.acv_commit,
+                acv_commit=acv_commit,
             )
         except CodexIntegrationError as exc:
             print(f"ACV Codex collection error: {exc}", file=sys.stderr)
             return 2
+
+        if acv_commit is None:
+            print(
+                "Warning: ACV commit could not be detected. The evidence bundle will record "
+                "producer.commit as null. Pass --acv-commit for publishable provenance.",
+                file=sys.stderr,
+            )
 
         if collection.bundle is None:
             print(f"{collection.result.verdict.value.upper()} {collection.result.property_name}")
