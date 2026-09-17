@@ -76,5 +76,3 @@ The adapter, disposable workspace, redacted hook recorder, and evidence collecto
 ACV is maintained by Charlie B, an independent builder working across agent security, AI systems, production financial software, and evidence-driven research.
 
 Other work includes [ChainTax](https://chaintax.co.uk), a live UK crypto-tax product, plus private quantitative and research infrastructure.
-
-Current areas of interest include remote roles in agent security, AI infrastructure, applied AI, research engineering, and security engineering for autonomous or tool-using systems.
