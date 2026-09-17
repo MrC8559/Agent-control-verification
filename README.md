@@ -21,7 +21,7 @@ The deterministic verification core is working. ACV can independently observe fi
 
 The current milestone is **v0.1.0: first real host integration**. Codex CLI `0.154.0` is the pinned first host.
 
-The Codex adapter, disposable probe workspace, redacted hook recorder, and evidence collector are implemented. The remaining milestone is to capture reproducible live Codex evidence for deny, allow, and controlled hook-failure cases.
+The Codex adapter, disposable probe workspace, redacted hook recorder, evidence collector, provenance hardening, and live-run preflight are implemented. The remaining milestone is to capture reproducible live Codex evidence for deny, allow, and controlled hook-failure cases.
 
 No live Codex evidence report has been published yet. ACV output is not a certification or security guarantee.
 
@@ -75,7 +75,9 @@ The current implementation includes:
 - a Codex `0.154.0` `apply_patch` hook adapter;
 - disposable Codex probe workspace generation;
 - redacted `PreToolUse` and `PostToolUse` recording;
-- a collector that compares hook evidence with the marker file read directly from the filesystem.
+- a collector that compares hook evidence with the marker file read directly from the filesystem;
+- a live-run preflight that verifies host pinning, ACV provenance, marker baseline, exact hook scope, and workspace freshness;
+- matching macOS/Linux and Windows probe helpers.
 
 The default test suite does not contact a production agent, model provider, human-approval system, or third-party service.
 
@@ -125,6 +127,24 @@ Evidence bundles contain fingerprints, component versions, explicit missing-evid
 
 The first live experiment uses a new or empty disposable directory and one marker file. ACV prepares project-scoped Codex hooks, records redacted hook evidence, then independently reads the marker file during collection.
 
+Before a live run, ACV can check readiness with:
+
+```bash
+python -m agent_control_verification codex-preflight
+```
+
+On macOS/Linux, the helper prepares and preflights a fresh workspace:
+
+```bash
+bash scripts/prepare-first-codex-probe.sh --mode deny
+```
+
+On Windows PowerShell:
+
+```powershell
+.\scripts\prepare-first-codex-probe.ps1 -Mode deny
+```
+
 The supported fixtures are:
 
 - deny;
@@ -151,8 +171,8 @@ The machine-readable evidence schema is [`schemas/evidence-bundle.schema.json`](
 
 The immediate sequence is:
 
-1. run the deny probe against an actual Codex CLI `0.154.0` session;
-2. independently verify the marker state and preserve the evidence bundle;
+1. run preflight against an actual Codex CLI `0.154.0` installation;
+2. run the deny probe and independently verify the marker state;
 3. run the matching allow case and pair pre/post evidence with the observed file effect;
 4. capture one controlled hook-failure case;
 5. document observed and untested Codex paths explicitly;
