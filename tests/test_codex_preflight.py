@@ -50,6 +50,17 @@ class CodexPreflightTests(unittest.TestCase):
         "agent_control_verification.codex_preflight.detect_codex_version",
         return_value=CODEX_TARGET_VERSION,
     )
+    def test_invalid_manual_acv_commit_is_not_ready(self, _detect):
+        report = run_codex_preflight(acv_commit="main")
+
+        self.assertFalse(report.ready)
+        commit = next(check for check in report.checks if check.name == "acv_commit")
+        self.assertFalse(commit.passed)
+
+    @patch(
+        "agent_control_verification.codex_preflight.detect_codex_version",
+        return_value=CODEX_TARGET_VERSION,
+    )
     def test_fresh_prepared_workspace_is_ready(self, _detect):
         with tempfile.TemporaryDirectory() as tmp:
             workspace = Path(tmp) / "probe"
