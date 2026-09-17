@@ -1,6 +1,6 @@
 # Threat model
 
-Checked: 2026-09-16
+Checked: 2026-09-17
 
 ## Security question
 
@@ -69,7 +69,7 @@ Policy denial, explicit refusal, timeout, transport loss, and malformed control 
 - secret-boundary checks;
 - multi-agent delegation and provenance;
 - explicit handling of indeterminate effect state;
-- stable evidence bundles for reproduction and review.
+- ordered real-host evidence across additional execution paths and hosts.
 
 ## Attacker model
 
