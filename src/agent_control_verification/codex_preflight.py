@@ -5,6 +5,7 @@ import hashlib
 import json
 import platform
 from pathlib import Path
+import re
 from typing import Any
 
 from .codex_evidence import detect_codex_version
@@ -15,6 +16,9 @@ from .codex_integration import (
     CodexIntegrationError,
 )
 from .evidence import sha256_text
+
+
+_ACV_COMMIT_RE = re.compile(r"^[0-9a-fA-F]{40,64}$")
 
 
 @dataclass(frozen=True)
@@ -78,15 +82,18 @@ def _safe_relative_path(value: Any) -> Path | None:
 def _workspace_checks(workspace: Path) -> list[PreflightCheck]:
     checks: list[PreflightCheck] = []
     workspace = workspace.resolve()
+    workspace_ok = workspace.exists() and workspace.is_dir()
 
     checks.append(
         _check(
             "workspace_directory",
-            workspace.exists() and workspace.is_dir(),
-            f"workspace exists as a directory: {workspace}",
+            workspace_ok,
+            f"workspace exists as a directory: {workspace}"
+            if workspace_ok
+            else f"workspace is missing or is not a directory: {workspace}",
         )
     )
-    if not workspace.exists() or not workspace.is_dir():
+    if not workspace_ok:
         return checks
 
     manifest_path = workspace / ".acv" / "codex-probe" / "manifest.json"
@@ -95,7 +102,9 @@ def _workspace_checks(workspace: Path) -> list[PreflightCheck]:
         _check(
             "probe_manifest",
             manifest is not None,
-            f"readable probe manifest: {manifest_path}",
+            f"readable probe manifest: {manifest_path}"
+            if manifest is not None
+            else f"probe manifest is missing or invalid: {manifest_path}",
         )
     )
     if manifest is None:
@@ -164,7 +173,9 @@ def _workspace_checks(workspace: Path) -> list[PreflightCheck]:
         _check(
             "hook_config",
             hooks is not None,
-            f"readable project hook config: {hooks_path if hooks_path else 'invalid'}",
+            f"readable project hook config: {hooks_path if hooks_path else 'invalid'}"
+            if hooks is not None
+            else f"project hook config is missing or invalid: {hooks_path if hooks_path else 'invalid'}",
         )
     )
 
@@ -190,7 +201,9 @@ def _workspace_checks(workspace: Path) -> list[PreflightCheck]:
             _check(
                 "hook_scope",
                 hook_shape_ok,
-                "PreToolUse/PostToolUse remain limited to apply_patch and the selected fixture mode",
+                "PreToolUse/PostToolUse remain limited to apply_patch and the selected fixture mode"
+                if hook_shape_ok
+                else "hook configuration does not match the narrow apply_patch probe contract",
             )
         )
 
@@ -257,11 +270,14 @@ def run_codex_preflight(
         )
     )
 
+    commit_ok = isinstance(acv_commit, str) and _ACV_COMMIT_RE.fullmatch(acv_commit) is not None
     checks.append(
         _check(
             "acv_commit",
-            acv_commit is not None,
-            f"ACV commit: {acv_commit}" if acv_commit else "ACV Git commit could not be established",
+            commit_ok,
+            f"ACV commit: {acv_commit}"
+            if commit_ok
+            else "ACV commit is missing or is not a full hexadecimal commit identifier",
         )
     )
 
