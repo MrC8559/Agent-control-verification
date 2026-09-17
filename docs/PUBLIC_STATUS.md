@@ -22,6 +22,8 @@ The immediate work is to:
 4. validate and publish the resulting version-pinned `acv-evidence-0.1` bundles;
 5. document the exact observed runtime and all unsupported or untested Codex paths.
 
+The publication structure for that result is prepared in [`LIVE_EVIDENCE_REPORT_TEMPLATE.md`](LIVE_EVIDENCE_REPORT_TEMPLATE.md).
+
 ## What is already implemented
 
 - deterministic `PASS`, `FAIL`, and `INCONCLUSIVE` verdicts;
