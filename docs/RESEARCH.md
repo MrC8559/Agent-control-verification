@@ -58,7 +58,7 @@ https://postcept.com/about
 
 These projects are close enough that ACV should state the distinction explicitly. ACV is not currently a runtime authorization gateway, SOC, or business-workflow completion service. Its narrower research focus is independent verification of whether a control decision, invocation evidence, and observed consequential effect agree for a specific host, version, execution path, and falsifiable property. If another project demonstrates equivalent independent effect-boundary verification across the same surfaces with comparable evidence, ACV's differentiation should be reconsidered rather than asserted.
 
-## Product hypothesis
+## Developer workflow hypothesis
 
 A useful developer workflow could eventually look like this:
 
@@ -70,7 +70,7 @@ produce PASS, FAIL, or INCONCLUSIVE
 block regressions in CI
 ```
 
-A hosted product could later retain private evidence, compare versions, run controlled matrices, and provide audit exports. This remains a hypothesis. The project does not yet have product-market-fit evidence.
+This is a workflow hypothesis, not evidence of adoption or demand.
 
 ## What would falsify the thesis?
 
