@@ -31,17 +31,29 @@ def _detect_acv_commit(
     start_path: Path | None = None,
     git_executable: str = "git",
 ) -> str | None:
-    """Return the ACV checkout commit when the package lives inside a Git worktree.
+    """Return the ACV checkout commit when the package lives inside its Git worktree.
 
-    Installed wheels and source copies without Git metadata are valid execution
-    environments, so failure to detect a commit is represented as None instead
-    of being guessed.
+    Installed wheels and copied source trees without their own Git metadata are
+    valid execution environments, so failure to detect a commit is represented
+    as None instead of borrowing provenance from an enclosing repository.
     """
 
     path = (start_path or Path(__file__)).resolve()
-    search_from = path.parent if path.is_file() else path
+    source_file = (
+        path
+        if path.is_file()
+        else path / "src" / "agent_control_verification" / "cli.py"
+    )
+    search_from = source_file.parent
+
     repo_root = next(
-        (candidate for candidate in (search_from, *search_from.parents) if (candidate / ".git").exists()),
+        (
+            candidate
+            for candidate in (search_from, *search_from.parents)
+            if (candidate / ".git").exists()
+            and (candidate / "src" / "agent_control_verification" / "cli.py").resolve()
+            == source_file
+        ),
         None,
     )
     if repo_root is None:
