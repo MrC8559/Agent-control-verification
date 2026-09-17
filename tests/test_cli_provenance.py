@@ -44,6 +44,25 @@ class CliProvenanceTests(unittest.TestCase):
             run.assert_not_called()
 
     @patch("agent_control_verification.cli.subprocess.run")
+    def test_detect_acv_commit_does_not_borrow_parent_repository(self, run: Mock):
+        with tempfile.TemporaryDirectory() as tmp:
+            parent = Path(tmp) / "parent"
+            (parent / ".git").mkdir(parents=True)
+            source = (
+                parent
+                / "vendor"
+                / "acv"
+                / "src"
+                / "agent_control_verification"
+                / "cli.py"
+            )
+            source.parent.mkdir(parents=True)
+            source.write_text("# copied fixture\n", encoding="utf-8")
+
+            self.assertIsNone(_detect_acv_commit(source))
+            run.assert_not_called()
+
+    @patch("agent_control_verification.cli.subprocess.run")
     def test_detect_acv_commit_rejects_non_commit_output(self, run: Mock):
         with tempfile.TemporaryDirectory() as tmp:
             repo = Path(tmp) / "repo"
