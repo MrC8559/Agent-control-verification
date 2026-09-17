@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 import tempfile
 import unittest
@@ -114,8 +115,46 @@ class CodexPreflightTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             workspace = Path(tmp) / "probe"
             paths = prepare_codex_probe(workspace, pre_mode="deny", python_executable="python")
-            text = paths.hooks_file.read_text(encoding="utf-8")
-            paths.hooks_file.write_text(text.replace("^apply_patch$", ".*", 1), encoding="utf-8")
+            config = json.loads(paths.hooks_file.read_text(encoding="utf-8"))
+            config["hooks"]["PreToolUse"][0]["matcher"] = ".*"
+            paths.hooks_file.write_text(json.dumps(config), encoding="utf-8")
+
+            report = run_codex_preflight(workspace, acv_commit=COMMIT)
+
+            self.assertFalse(report.ready)
+            scope = next(check for check in report.checks if check.name == "hook_scope")
+            self.assertFalse(scope.passed)
+
+    @patch(
+        "agent_control_verification.codex_preflight.detect_codex_version",
+        return_value=CODEX_TARGET_VERSION,
+    )
+    def test_extra_hook_entry_blocks_preflight(self, _detect):
+        with tempfile.TemporaryDirectory() as tmp:
+            workspace = Path(tmp) / "probe"
+            paths = prepare_codex_probe(workspace, pre_mode="deny", python_executable="python")
+            config = json.loads(paths.hooks_file.read_text(encoding="utf-8"))
+            config["hooks"]["PostToolUse"].append(config["hooks"]["PostToolUse"][0])
+            paths.hooks_file.write_text(json.dumps(config), encoding="utf-8")
+
+            report = run_codex_preflight(workspace, acv_commit=COMMIT)
+
+            self.assertFalse(report.ready)
+            scope = next(check for check in report.checks if check.name == "hook_scope")
+            self.assertFalse(scope.passed)
+
+    @patch(
+        "agent_control_verification.codex_preflight.detect_codex_version",
+        return_value=CODEX_TARGET_VERSION,
+    )
+    def test_redirected_hook_log_blocks_preflight(self, _detect):
+        with tempfile.TemporaryDirectory() as tmp:
+            workspace = Path(tmp) / "probe"
+            paths = prepare_codex_probe(workspace, pre_mode="deny", python_executable="python")
+            config = json.loads(paths.hooks_file.read_text(encoding="utf-8"))
+            pre_hook = config["hooks"]["PreToolUse"][0]["hooks"][0]
+            pre_hook["command"] = pre_hook["command"].replace(str(paths.log_file), str(workspace / "other.log"))
+            paths.hooks_file.write_text(json.dumps(config), encoding="utf-8")
 
             report = run_codex_preflight(workspace, acv_commit=COMMIT)
 
