@@ -165,6 +165,17 @@ def _workspace_checks(workspace: Path) -> list[PreflightCheck]:
             )
         )
 
+    log_rel = _safe_relative_path(manifest.get("hook_log_path"))
+    log_path = (workspace / log_rel).resolve() if log_rel is not None else None
+    log_inside = log_path is not None and log_path.is_relative_to(workspace)
+    checks.append(
+        _check(
+            "hook_log_path",
+            log_inside,
+            f"hook log path resolves inside workspace: {log_path if log_path else 'invalid'}",
+        )
+    )
+
     hooks_rel = _safe_relative_path(manifest.get("hooks_path"))
     hooks_path = (workspace / hooks_rel).resolve() if hooks_rel is not None else None
     hooks_inside = hooks_path is not None and hooks_path.is_relative_to(workspace)
@@ -179,21 +190,41 @@ def _workspace_checks(workspace: Path) -> list[PreflightCheck]:
         )
     )
 
-    if hooks is not None and mode_ok:
+    if hooks is not None and mode_ok and log_inside and log_path is not None:
         try:
-            pre_entry = hooks["hooks"]["PreToolUse"][0]
-            post_entry = hooks["hooks"]["PostToolUse"][0]
+            hooks_root = hooks["hooks"]
+            pre_entries = hooks_root["PreToolUse"]
+            post_entries = hooks_root["PostToolUse"]
+            exact_shape = (
+                set(hooks) == {"hooks"}
+                and set(hooks_root) == {"PreToolUse", "PostToolUse"}
+                and len(pre_entries) == 1
+                and len(post_entries) == 1
+                and len(pre_entries[0]["hooks"]) == 1
+                and len(post_entries[0]["hooks"]) == 1
+            )
+            pre_entry = pre_entries[0]
+            post_entry = post_entries[0]
             pre_hook = pre_entry["hooks"][0]
             post_hook = post_entry["hooks"][0]
+            pre_command = pre_hook.get("command", "")
+            post_command = post_hook.get("command", "")
             hook_shape_ok = (
-                pre_entry.get("matcher") == "^apply_patch$"
+                exact_shape
+                and pre_entry.get("matcher") == "^apply_patch$"
                 and post_entry.get("matcher") == "^apply_patch$"
                 and pre_hook.get("type") == "command"
                 and post_hook.get("type") == "command"
-                and "codex-hook" in pre_hook.get("command", "")
-                and f"--mode {mode}" in pre_hook.get("command", "")
-                and "codex-hook" in post_hook.get("command", "")
-                and "--mode observe" in post_hook.get("command", "")
+                and pre_hook.get("timeout") == 15
+                and post_hook.get("timeout") == 15
+                and "-m agent_control_verification" in pre_command
+                and "codex-hook" in pre_command
+                and f"--mode {mode}" in pre_command
+                and str(log_path) in pre_command
+                and "-m agent_control_verification" in post_command
+                and "codex-hook" in post_command
+                and "--mode observe" in post_command
+                and str(log_path) in post_command
             )
         except (KeyError, IndexError, TypeError, AttributeError):
             hook_shape_ok = False
@@ -201,15 +232,12 @@ def _workspace_checks(workspace: Path) -> list[PreflightCheck]:
             _check(
                 "hook_scope",
                 hook_shape_ok,
-                "PreToolUse/PostToolUse remain limited to apply_patch and the selected fixture mode"
+                "hook config exactly matches the two-hook apply_patch probe contract"
                 if hook_shape_ok
-                else "hook configuration does not match the narrow apply_patch probe contract",
+                else "hook configuration differs from the narrow generated probe contract",
             )
         )
 
-    log_rel = _safe_relative_path(manifest.get("hook_log_path"))
-    log_path = (workspace / log_rel).resolve() if log_rel is not None else None
-    log_inside = log_path is not None and log_path.is_relative_to(workspace)
     log_unused = log_inside and log_path is not None and not log_path.exists()
     checks.append(
         _check(
