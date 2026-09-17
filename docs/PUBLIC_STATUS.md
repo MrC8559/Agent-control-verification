@@ -2,6 +2,8 @@
 
 Agent Control Verification is an experimental, pre-alpha security research project.
 
+ACV is also the verification engine for the broader **Agent Action Integrity Observatory** research programme. The Observatory is intended to accumulate narrow, version-pinned observations about whether agent control outcomes agree with independently observable effects. It does not yet have a published dataset or cross-host matrix. See [`ACTION_INTEGRITY_OBSERVATORY.md`](ACTION_INTEGRITY_OBSERVATORY.md).
+
 The deterministic verification core is working. The project can distinguish a control decision from an independently observed effect, model approval binding and replay, record control-failure posture, and export versioned redacted evidence bundles.
 
 The current milestone is the first real host integration. ACV has implemented a narrow, version-pinned Codex CLI `0.154.0` experiment around native `PreToolUse` and `PostToolUse` hooks for a harmless `apply_patch` operation in a disposable workspace.
@@ -24,6 +26,8 @@ The immediate work is to:
 
 The publication structure for that result is prepared in [`LIVE_EVIDENCE_REPORT_TEMPLATE.md`](LIVE_EVIDENCE_REPORT_TEMPLATE.md).
 
+If this milestone succeeds, that evidence set becomes the first candidate Observatory observation. A formal observation index remains post-`v0.1.0` work and is tracked separately.
+
 ## What is already implemented
 
 - deterministic `PASS`, `FAIL`, and `INCONCLUSIVE` verdicts;
@@ -45,6 +49,6 @@ No live Codex evidence report has been published yet.
 
 ## What is not claimed
 
-ACV does not currently claim production readiness, complete agent-host coverage, OWASP or ACS conformance, or certification of any agent system.
+ACV and the Observatory do not currently claim production readiness, complete agent-host coverage, OWASP or ACS conformance, certification of any agent system, or an overall security ranking of agent products.
 
 The project will broaden only after the first real integration produces reproducible evidence.
