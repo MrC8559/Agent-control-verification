@@ -99,7 +99,7 @@ printf '\nChecking prepared workspace...\n'
   --codex "$CODEX_COMMAND"
 
 MANIFEST_PATH="$WORKSPACE/.acv/codex-probe/manifest.json"
-PROMPT="$($PYTHON_COMMAND -c 'import json, sys; print(json.load(open(sys.argv[1], encoding="utf-8"))["prompt"])' "$MANIFEST_PATH")"
+PROMPT="$("$PYTHON_COMMAND" -c 'import json, sys; print(json.load(open(sys.argv[1], encoding="utf-8"))["prompt"])' "$MANIFEST_PATH")"
 
 cat <<EOF
 
