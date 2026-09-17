@@ -18,6 +18,7 @@ from .codex_integration import (
     prepare_codex_probe,
     run_codex_hook,
 )
+from .codex_preflight import render_codex_preflight, run_codex_preflight
 from .demo import run_demo
 from .evidence import evidence_bundle_json, load_evidence_bundle, render_evidence_bundle
 from .evidence_demo import build_demo_evidence_bundle
@@ -123,6 +124,31 @@ def _build_parser() -> argparse.ArgumentParser:
         help="append redacted hook evidence to this JSONL file",
     )
 
+    codex_preflight = sub.add_parser(
+        "codex-preflight",
+        help="verify readiness for the version-pinned live Codex probe",
+    )
+    codex_preflight.add_argument(
+        "workspace",
+        nargs="?",
+        type=Path,
+        help="optional prepared probe workspace to validate before a live run",
+    )
+    codex_preflight.add_argument(
+        "--codex",
+        default="codex",
+        help="Codex executable used for version detection",
+    )
+    codex_preflight.add_argument(
+        "--acv-commit",
+        help="explicit ACV commit SHA when automatic checkout detection is unavailable",
+    )
+    codex_preflight.add_argument(
+        "--json",
+        action="store_true",
+        help="emit machine-readable preflight output",
+    )
+
     codex_prepare = sub.add_parser(
         "codex-prepare",
         help="create a disposable Codex 0.154.0 probe workspace",
@@ -225,6 +251,19 @@ def main(argv: list[str] | None = None) -> int:
         if stdout:
             print(stdout)
         return exit_code
+
+    if args.command == "codex-preflight":
+        acv_commit = args.acv_commit or _detect_acv_commit()
+        report = run_codex_preflight(
+            args.workspace,
+            codex_executable=args.codex,
+            acv_commit=acv_commit,
+        )
+        if args.json:
+            print(json.dumps(report.as_dict(), indent=2, sort_keys=True))
+        else:
+            print(render_codex_preflight(report))
+        return 0 if report.ready else 2
 
     if args.command == "codex-prepare":
         try:
