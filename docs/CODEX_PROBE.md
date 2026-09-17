@@ -12,6 +12,7 @@ ACV can now:
 
 - prepare a new disposable workspace;
 - install project-scoped `PreToolUse` and `PostToolUse` hook configuration for `apply_patch` only;
+- preflight the pinned host, ACV provenance, runtime, marker baseline, hook scope, and workspace freshness before a live run;
 - record redacted hook evidence without storing the raw patch, raw tool response, session id, turn id, or tool-use id;
 - run controlled deny, allow, malformed-output, and hook-exit fixtures;
 - compare the marker file after the run with its recorded baseline;
@@ -51,9 +52,69 @@ codex --version
 
 Only `0.154.0` is the pinned host for this experiment. ACV records another observed version, but the resulting property remains `INCONCLUSIVE`.
 
+## Preflight
+
+Before preparing publishable live evidence, run:
+
+```bash
+python -m agent_control_verification codex-preflight
+```
+
+The host-only preflight requires:
+
+- a runnable Codex CLI reporting exactly `0.154.0`;
+- Python 3.11 or newer;
+- a full ACV Git commit identifier from the source checkout, or an explicit `--acv-commit` override.
+
+After preparing a workspace, run preflight again with the workspace path:
+
+```bash
+python -m agent_control_verification codex-preflight /tmp/acv-codex-deny
+```
+
+The workspace preflight also checks:
+
+- the probe manifest schema and pinned host version;
+- the selected fixture mode;
+- that the marker still matches the recorded `BASELINE` state;
+- that the hook configuration remains limited to `apply_patch` with the expected pre/post modes;
+- that no hook log or evidence bundle already exists in the workspace.
+
+A failed preflight means the workspace should not be used for publishable first-host evidence. A successful preflight means only that the setup is ready for the narrow experiment. It is not evidence that Codex enforces the control.
+
+Machine-readable output is available with `--json`.
+
+## Platform helpers
+
+### macOS and Linux
+
+From the ACV checkout:
+
+```bash
+bash scripts/prepare-first-codex-probe.sh --mode deny
+```
+
+The helper:
+
+1. runs host/provenance preflight before creating a workspace;
+2. creates a new disposable workspace under `$TMPDIR` unless `--workspace` is supplied;
+3. prepares the selected probe mode;
+4. runs the full workspace preflight;
+5. prints the exact prompt and collection/validation commands.
+
+Options include `--mode`, `--workspace`, `--codex`, and `--python`.
+
+### Windows PowerShell
+
+```powershell
+.\scripts\prepare-first-codex-probe.ps1 -Mode deny
+```
+
+The PowerShell helper uses the same `codex-preflight` checks before and after workspace preparation.
+
 ## Deny probe
 
-Prepare a workspace:
+Prepare a workspace manually if not using a platform helper:
 
 ```bash
 acv codex-prepare /tmp/acv-codex-deny --mode deny
@@ -142,7 +203,7 @@ Collection writes this by default:
 .acv/codex-probe/evidence.json
 ```
 
-The saved bundle includes the observed Codex version, ACV version, redacted action fingerprint, host-side invocation fingerprint when available, independent marker-effect fingerprint when a change occurred, explicit missing-evidence fields, environment metadata, and the evidence-bundle integrity digest.
+The saved bundle includes the observed Codex version, ACV version and commit when available, redacted action and run references, model/runtime provenance, host-side invocation fingerprints when available, independent marker-effect evidence, explicit missing-evidence fields, collection-time hook/source digests, environment metadata, and the evidence-bundle integrity digest.
 
 The hook JSONL is deliberately redacted. It stores hashes of sensitive identifiers and tool payloads rather than their raw values.
 
