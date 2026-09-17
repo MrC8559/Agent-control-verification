@@ -13,6 +13,8 @@ ACV records two separate evidence sources:
 
 The project focuses on decision-to-effect verification. It is not intended to be a generic prompt-injection scanner.
 
+ACV is the verification engine for the broader **Agent Action Integrity Observatory** research programme. The Observatory is intended to accumulate narrow, version-pinned observations about whether agent control outcomes agree with independently observable effects. It does not yet have a published dataset or cross-host matrix, and it does not produce aggregate product security scores. See [`docs/ACTION_INTEGRITY_OBSERVATORY.md`](docs/ACTION_INTEGRITY_OBSERVATORY.md).
+
 ## Status
 
 **Research preview. Experimental and pre-alpha.**
@@ -26,6 +28,7 @@ The Codex adapter, disposable probe workspace, redacted hook recorder, evidence 
 No live Codex evidence report has been published yet. ACV output is not a certification or security guarantee.
 
 - [Public project status](docs/PUBLIC_STATUS.md)
+- [Agent Action Integrity Observatory](docs/ACTION_INTEGRITY_OBSERVATORY.md)
 - [Roadmap](ROADMAP.md)
 - [Codex probe](docs/CODEX_PROBE.md)
 - [First-host decision](docs/decisions/0001-first-real-host-codex.md)
@@ -162,6 +165,7 @@ The workflow and safety boundary are documented in [`docs/CODEX_PROBE.md`](docs/
 - [`docs/EVIDENCE_BUNDLE.md`](docs/EVIDENCE_BUNDLE.md)
 - [`docs/THREAT_MODEL.md`](docs/THREAT_MODEL.md)
 - [`docs/RESEARCH.md`](docs/RESEARCH.md)
+- [`docs/ACTION_INTEGRITY_OBSERVATORY.md`](docs/ACTION_INTEGRITY_OBSERVATORY.md)
 - [`docs/CODEX_PROBE.md`](docs/CODEX_PROBE.md)
 - [`docs/decisions/0001-first-real-host-codex.md`](docs/decisions/0001-first-real-host-codex.md)
 
@@ -178,7 +182,7 @@ The immediate sequence is:
 5. document observed and untested Codex paths explicitly;
 6. publish the first version-pinned evidence report without claiming certification.
 
-Only after that does the roadmap broaden toward additional Codex execution paths, other agent hosts, MCP boundaries, and continuous regression testing.
+If that evidence set is complete and reproducible, it becomes the first candidate Agent Action Integrity Observatory observation. Only after that does the roadmap broaden toward an observation index, additional Codex execution paths, other agent hosts, MCP boundaries, and continuous regression testing.
 
 See [`ROADMAP.md`](ROADMAP.md) for the longer sequence.
 
