@@ -38,10 +38,10 @@ https://github.com/openai/codex/blob/rust-v0.154.0/codex-rs/hooks/src/events/pre
 Source:
 https://github.com/openai/codex/blob/rust-v0.154.0/codex-rs/hooks/src/events/post_tool_use.rs
 
-The `apply_patch` handler has both pre-tool and post-tool hook payload support in current source. That makes it a suitable first effect surface because ACV can also verify the resulting file state without trusting Codex's own result message.
+The `apply_patch` handler in the pinned `0.154.0` source has both pre-tool and post-tool hook payload support. That makes it a suitable first effect surface because ACV can also verify the resulting file state without trusting Codex's own result message.
 
 Source:
-https://github.com/openai/codex/blob/main/codex-rs/core/src/tools/handlers/apply_patch.rs
+https://github.com/openai/codex/blob/rust-v0.154.0/codex-rs/core/src/tools/handlers/apply_patch.rs
 
 ## Why this is useful research
 
