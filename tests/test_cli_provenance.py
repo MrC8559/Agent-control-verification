@@ -26,7 +26,7 @@ class CliProvenanceTests(unittest.TestCase):
 
             self.assertEqual(_detect_acv_commit(source), COMMIT)
             run.assert_called_once_with(
-                ["git", "-C", str(repo), "rev-parse", "--verify", "HEAD"],
+                ["git", "-C", str(repo.resolve()), "rev-parse", "--verify", "HEAD"],
                 text=True,
                 capture_output=True,
                 timeout=10,
