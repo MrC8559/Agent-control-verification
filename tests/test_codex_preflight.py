@@ -147,6 +147,30 @@ class CodexPreflightTests(unittest.TestCase):
         "agent_control_verification.codex_preflight.detect_codex_version",
         return_value=CODEX_TARGET_VERSION,
     )
+    def test_hook_config_modified_after_prepare_blocks_preflight_even_with_same_shape(self, _detect):
+        with tempfile.TemporaryDirectory() as tmp:
+            workspace = Path(tmp) / "probe"
+            paths = prepare_codex_probe(workspace, pre_mode="deny", python_executable="python")
+            config = json.loads(paths.hooks_file.read_text(encoding="utf-8"))
+            # Re-serialize with different formatting only: the logical hook shape
+            # (matchers, commands, timeouts) is unchanged, so a shape-only check
+            # would not notice this file was swapped after codex-prepare ran.
+            paths.hooks_file.write_text(json.dumps(config, indent=4) + "\n", encoding="utf-8")
+
+            report = run_codex_preflight(workspace, acv_commit=COMMIT)
+
+            self.assertFalse(report.ready)
+            integrity = next(
+                check for check in report.checks if check.name == "hook_config_integrity"
+            )
+            self.assertFalse(integrity.passed)
+            scope = next(check for check in report.checks if check.name == "hook_scope")
+            self.assertTrue(scope.passed)
+
+    @patch(
+        "agent_control_verification.codex_preflight.detect_codex_version",
+        return_value=CODEX_TARGET_VERSION,
+    )
     def test_redirected_hook_log_blocks_preflight(self, _detect):
         with tempfile.TemporaryDirectory() as tmp:
             workspace = Path(tmp) / "probe"

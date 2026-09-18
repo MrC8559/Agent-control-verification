@@ -1,4 +1,5 @@
 from datetime import datetime, timezone
+import hashlib
 import json
 from pathlib import Path
 import tempfile
@@ -176,6 +177,10 @@ class CodexProbePreparationTests(unittest.TestCase):
             manifest = json.loads(paths.manifest_file.read_text(encoding="utf-8"))
             self.assertEqual(manifest["codex_expected_version"], CODEX_TARGET_VERSION)
             self.assertEqual(manifest["pre_mode"], "deny")
+            self.assertEqual(
+                manifest["hooks_sha256"],
+                hashlib.sha256(paths.hooks_file.read_bytes()).hexdigest(),
+            )
             self.assertEqual(hooks["hooks"]["PreToolUse"][0]["matcher"], "^apply_patch$")
             self.assertTrue(str(paths.hooks_file).startswith(str(workspace.resolve())))
             self.assertFalse(paths.log_file.exists())

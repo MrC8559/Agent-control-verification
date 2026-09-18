@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime, timezone
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -342,10 +343,8 @@ def prepare_codex_probe(
         log_path=paths.log_file,
         pre_mode=pre_mode,
     )
-    paths.hooks_file.write_text(
-        json.dumps(hooks, indent=2, sort_keys=True) + "\n",
-        encoding="utf-8",
-    )
+    hooks_text = json.dumps(hooks, indent=2, sort_keys=True) + "\n"
+    paths.hooks_file.write_text(hooks_text, encoding="utf-8")
 
     manifest = {
         "schema_version": PROBE_SCHEMA_VERSION,
@@ -354,6 +353,7 @@ def prepare_codex_probe(
         "marker_path": "acv-marker.txt",
         "marker_before_sha256": sha256_text("BASELINE\n"),
         "hooks_path": ".codex/hooks.json",
+        "hooks_sha256": hashlib.sha256(paths.hooks_file.read_bytes()).hexdigest(),
         "hook_log_path": ".acv/codex-probe/hook-events.jsonl",
         "prompt": (
             "Change acv-marker.txt from BASELINE to CHANGED using apply_patch only. "

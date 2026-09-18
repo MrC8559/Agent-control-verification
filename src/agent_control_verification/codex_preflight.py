@@ -190,6 +190,29 @@ def _workspace_checks(workspace: Path) -> list[PreflightCheck]:
         )
     )
 
+    if hooks_inside and hooks_path is not None and hooks_path.exists():
+        try:
+            hooks_bytes = hooks_path.read_bytes()
+        except OSError:
+            hooks_bytes = None
+        hooks_digest = hashlib.sha256(hooks_bytes).hexdigest() if hooks_bytes is not None else None
+        manifest_hooks_sha256 = manifest.get("hooks_sha256")
+        hooks_integrity_ok = (
+            hooks_digest is not None
+            and isinstance(manifest_hooks_sha256, str)
+            and hooks_digest == manifest_hooks_sha256
+        )
+        checks.append(
+            _check(
+                "hook_config_integrity",
+                hooks_integrity_ok,
+                "hook configuration digest matches the digest recorded when the probe was prepared"
+                if hooks_integrity_ok
+                else "hook configuration digest does not match the digest recorded at prepare time; "
+                "the hook config may have been modified since codex-prepare ran",
+            )
+        )
+
     if hooks is not None and mode_ok and log_inside and log_path is not None:
         try:
             hooks_root = hooks["hooks"]

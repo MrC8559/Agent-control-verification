@@ -158,6 +158,69 @@ class CodexEvidenceGuardTests(unittest.TestCase):
             self.assertEqual(len(environment["hook_adapter_sha256_collected"]), 64)
             self.assertEqual(len(environment["hook_entrypoint_sha256_collected"]), 64)
 
+    def test_hook_config_modified_after_prepare_forces_fail_even_for_allow(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            workspace = Path(tmp) / "probe"
+            paths = prepare_codex_probe(workspace, pre_mode="allow", python_executable="python")
+            self._record(
+                paths.log_file,
+                payload(workspace, "PreToolUse", "call-1"),
+                "allow",
+                T0,
+            )
+            paths.marker_file.write_text("CHANGED\n", encoding="utf-8")
+            self._record(
+                paths.log_file,
+                payload(workspace, "PostToolUse", "call-1"),
+                "observe",
+                T1,
+            )
+
+            # Same logical hook configuration, re-serialized differently, simulating
+            # a hook file that was swapped or edited after codex-prepare ran and
+            # before/while Codex used it.
+            config = json.loads(paths.hooks_file.read_text(encoding="utf-8"))
+            paths.hooks_file.write_text(json.dumps(config, indent=4) + "\n", encoding="utf-8")
+
+            collection = collect_codex_probe_strict(
+                workspace,
+                codex_version=CODEX_TARGET_VERSION,
+            )
+
+            self.assertEqual(collection.result.verdict, Verdict.FAIL)
+            self.assertIn("hook configuration digest", collection.result.reason)
+            environment = collection.bundle["environment"]
+            self.assertIn("hook_config_sha256_prepared", environment)
+            self.assertIn("hook_config_sha256_collected", environment)
+            self.assertNotEqual(
+                environment["hook_config_sha256_prepared"],
+                environment["hook_config_sha256_collected"],
+            )
+            validate_evidence_bundle(collection.bundle)
+
+    def test_matching_hook_config_digest_records_both_values_without_forcing_fail(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            workspace = Path(tmp) / "probe"
+            paths = prepare_codex_probe(workspace, pre_mode="deny", python_executable="python")
+            self._record(
+                paths.log_file,
+                payload(workspace, "PreToolUse", "call-1"),
+                "deny",
+                T0,
+            )
+
+            collection = collect_codex_probe_strict(
+                workspace,
+                codex_version=CODEX_TARGET_VERSION,
+            )
+
+            self.assertEqual(collection.result.verdict, Verdict.PASS)
+            environment = collection.bundle["environment"]
+            self.assertEqual(
+                environment["hook_config_sha256_prepared"],
+                environment["hook_config_sha256_collected"],
+            )
+
     def test_missing_collected_hook_config_digest_is_explicit(self):
         with tempfile.TemporaryDirectory() as tmp:
             workspace = Path(tmp) / "probe"
