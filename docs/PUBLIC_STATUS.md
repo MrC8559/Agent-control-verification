@@ -6,7 +6,7 @@ ACV is also the verification engine for the broader **Agent Action Integrity Obs
 
 The deterministic verification core is working. The project can distinguish a control decision from an independently observed effect, model approval binding and replay, record control-failure posture, and export versioned redacted evidence bundles.
 
-The v0.1.0 first real-host evidence milestone is complete for Windows Codex CLI `0.154.0`, using `exec` to call `tools.apply_patch` and one independently observed marker file. Closeout publication and release approval remain pending.
+The v0.1.0 first real-host evidence milestone is complete for Windows Codex CLI `0.154.0`, using `exec` to call `tools.apply_patch` and one independently observed marker file. The reviewed closeout is published; final release publication remains pending.
 
 ## Completed evidence milestone
 
@@ -19,7 +19,7 @@ The [consolidated report](reports/2026-09-19-codex-0.154.0.md) preserves four ou
 
 The controlled-failure FAIL demonstrates detection, not a failed experiment. Raw malformed hook stdout was not captured; its bytes are defined by the verified frozen fixture. The captured mode, invocation and effect records are distinguished from that source-defined output in the report.
 
-The tested revision is `04efa04f05d95efa30963e8a4190556e60569127`, package `0.0.3`. The milestone name is not a claim that a `0.1.0` package or final release already exists. No Observatory index or later research has begun.
+The tested revision is `04efa04f05d95efa30963e8a4190556e60569127`, package `0.0.3`. The reviewed evidence closeout was published in commit `7396b6526b2ce6562249169fa707cf261d38a348`. Current package metadata is prepared as `0.1.0`; this release preparation changes version metadata and current status documentation only. The live experiment was not rerun against the closeout or release-preparation changes. No final `v0.1.0` tag or GitHub release exists yet. No Observatory index or later research has begun.
 
 ## What is already implemented
 
@@ -38,7 +38,7 @@ The tested revision is `04efa04f05d95efa30963e8a4190556e60569127`, package `0.0.
 - automatic ACV checkout commit provenance when available;
 - preserved model, redacted session/turn, runtime, permission-mode, hook-schema, and collection-time hook/source digest provenance.
 
-A repository closeout report and redacted evidence copies are prepared for review; external publication remains pending.
+The repository closeout report and redacted evidence copies are published, and integration issues #13 and #14 are closed.
 
 ## What is not claimed
 

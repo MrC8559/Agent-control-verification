@@ -7,9 +7,9 @@ ACV develops through evidence checkpoints rather than feature count. A milestone
 - `v0.0.1` decision/effect proof: complete
 - `v0.0.2` independent effects, approvals, and failure posture: complete
 - `v0.0.3` evidence-bundle core: substantially complete
-- `v0.1.0` first real host integration: evidence complete; closeout publication/release approval pending
+- `v0.1.0` first real host integration: evidence complete; closeout published; final release pending
 
-The four preserved outcomes and scope limits are documented in the [final evidence report](docs/reports/2026-09-19-codex-0.154.0.md). The remaining administrative gate is closeout review/publication, not another live experiment. Package metadata remains `0.0.3` pending an explicit release decision.
+The four preserved outcomes and scope limits are documented in the [final evidence report](docs/reports/2026-09-19-codex-0.154.0.md). The reviewed closeout is published. Package metadata is prepared as `0.1.0`; final commit, CI, tag and release steps remain pending. No further live experiment is required for this milestone.
 
 See [`docs/PUBLIC_STATUS.md`](docs/PUBLIC_STATUS.md) for the short public checkpoint and [`docs/CODEX_PROBE.md`](docs/CODEX_PROBE.md) for the runnable experiment.
 
@@ -77,7 +77,7 @@ Pinned host: Codex CLI `0.154.0`.
 - [x] Record exact observed host, runtime, adapter, and evidence versions
 - [x] Document unsupported or untested Codex tool paths explicitly
 - [x] Prepare the consolidated version-pinned evidence report and validated redacted artifacts without claiming certification
-- [ ] Publish the reviewed closeout (administrative follow-up; no further experiment required)
+- [x] Publish the reviewed closeout (administrative follow-up; no further experiment required)
 
 The milestone is complete only when the saved evidence can be inspected independently and the result remains appropriately scoped to the observed Codex version and tool path.
 

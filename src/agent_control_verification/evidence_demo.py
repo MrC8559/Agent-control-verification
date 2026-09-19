@@ -16,7 +16,7 @@ def _acv_version() -> str:
     try:
         return version("agent-control-verification")
     except PackageNotFoundError:
-        return "0.0.3"
+        return "0.1.0"
 
 
 def _audit_ref(action_id: str, action_fingerprint: str, decision: str, message: str) -> str:

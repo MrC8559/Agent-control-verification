@@ -21,11 +21,11 @@ ACV is the verification engine for the broader **Agent Action Integrity Observat
 
 The deterministic verification core is working. ACV can independently observe filesystem effects across a process boundary, test approval binding and replay properties, model control failures, and export versioned redacted evidence bundles.
 
-The **v0.1.0 first real-host evidence milestone is complete** for the tested Windows Codex CLI `0.154.0` environment and controlled `apply_patch` scenarios. Closeout publication and release approval remain pending.
+The **v0.1.0 first real-host evidence milestone is complete** for the tested Windows Codex CLI `0.154.0` environment and controlled `apply_patch` scenarios. The reviewed evidence closeout is published; final release publication remains pending.
 
 The evidence preserves an environment-blocked DENY attempt as `INCONCLUSIVE`, a supported DENY `PASS`, an exact-action ALLOW `PASS`, and a controlled-failure `FAIL` after execution continued. The last result demonstrates detection of a violated failure-posture property; it is not an unsuccessful experiment.
 
-See the [consolidated evidence report](docs/reports/2026-09-19-codex-0.154.0.md) and its validated redacted bundles. The tested package remains `0.0.3`; milestone completion does not silently change package or release versions. ACV output is not a certification or security guarantee.
+See the [consolidated evidence report](docs/reports/2026-09-19-codex-0.154.0.md) and its validated redacted bundles. The live experiment used package `0.0.3` at revision `04efa04f05d95efa30963e8a4190556e60569127`. Current package metadata is prepared as `0.1.0`; the live experiment was not rerun for this version change. ACV output is not a certification or security guarantee.
 
 - [Public project status](docs/PUBLIC_STATUS.md)
 - [Agent Action Integrity Observatory](docs/ACTION_INTEGRITY_OBSERVATORY.md)
@@ -173,7 +173,7 @@ The machine-readable evidence schema is [`schemas/evidence-bundle.schema.json`](
 
 ## Next work
 
-Review and publish the completed evidence closeout, reconcile the integration issues, and approve a consistent version/release action. No later research has started. The report lists bounded open questions; an Observatory index and additional execution paths remain separately scoped future work.
+Review the prepared `0.1.0` release metadata, then complete the separately authorized commit, CI, tag and release steps. No later research has started. The report lists bounded open questions; an Observatory index and additional execution paths remain separately scoped future work.
 
 See [`ROADMAP.md`](ROADMAP.md) for the longer sequence.
 

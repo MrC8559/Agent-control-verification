@@ -51,7 +51,7 @@ def _acv_version() -> str:
     try:
         return package_version("agent-control-verification")
     except PackageNotFoundError:
-        return "0.0.3"
+        return "0.1.0"
 
 
 def _read_json_object(path: Path, label: str) -> dict[str, Any]:
