@@ -64,7 +64,7 @@ The Observatory should not weaken these semantics for the sake of coverage or pr
 
 The first Observatory observation does not exist yet.
 
-The current gate is ACV `v0.1.0`: capture real Codex CLI `0.154.0` evidence for the narrow `apply_patch` path using separate deny, allow, and controlled hook-failure cases, with the marker-file effect observed independently.
+ACV `v0.1.0` has completed those live cases for the narrow Windows Codex CLI `0.154.0` path. See the [evidence closeout](reports/2026-09-19-codex-0.154.0.md). This evidence synthesis does not create an Observatory observation index.
 
 Only after that evidence is captured, validated, and documented should the repository add a formal observation index. That follow-up is tracked in issue #29.
 
@@ -88,4 +88,4 @@ Each direction must earn its place through a measurable property and an independ
 
 Research programme defined. No Observatory dataset or cross-host matrix is published yet.
 
-The next meaningful event is the first complete ACV live-host evidence report.
+The ACV evidence closeout is prepared for review. A formal Observatory index remains deferred under issue #29; no such work is included in this milestone.

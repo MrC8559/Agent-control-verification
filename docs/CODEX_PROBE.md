@@ -19,7 +19,9 @@ ACV can now:
 - produce an `acv-evidence-0.1` bundle when an actual `PreToolUse` action was captured;
 - refuse to report `PASS` when the observed Codex version differs from `0.154.0`.
 
-No live Codex result is committed to the repository yet.
+The [2026-09-19 evidence report](reports/2026-09-19-codex-0.154.0.md) records the completed Windows live cases and an earlier environment-blocked attempt. Its redacted artifacts are prepared for closeout review. This does not establish other-host or other-tool coverage.
+
+The first attempt exposed a preparation limit: ACV preflight checks the main Codex version and probe contract, but does not prove that all host companion executables can start. The repaired official 0.154.0 code-mode host was independently smoke-tested outside the experiment workspaces before a fresh DENY attempt. Preserve each failed attempt and any remediation separately.
 
 ## Safety boundary
 
@@ -221,4 +223,4 @@ The hook JSONL is deliberately redacted. It stores hashes of sensitive identifie
 
 The marker file is the independent effect surface for this first experiment. ACV does not claim that the Codex process itself is independently sandboxed or that absence of a marker change proves no other effect occurred.
 
-Only the `apply_patch` path is in scope. Shell execution, Code Mode, MCP tools, file-read paths, subagents, and other Codex execution surfaces remain untested until ACV measures them separately.
+Only the observed `exec` calling `tools.apply_patch` path is in scope. Other Code Mode tools/routes, direct tool routes, shell execution, MCP tools, file-read paths, subagents, other versions and other operating systems remain untested by this evidence.

@@ -1,0 +1,42 @@
+{
+  "deny.json": {
+    "source_relative_to_private_lab": "attempt2/deny/.acv/codex-probe/evidence.json",
+    "sha256": "d78bafaf2494a770eb2cebaf701d45bd4f4484f8fef6e84f3106d6ddec8661c9"
+  },
+  "deny-hooks.jsonl": {
+    "source_relative_to_private_lab": "attempt2/deny/.acv/codex-probe/hook-events.jsonl",
+    "sha256": "745c1ff6c812460b70bf1519033d34d7cb62f2887471f4c070ab8239e729220d"
+  },
+  "deny-rendered.txt": {
+    "source_relative_to_private_lab": "attempt2/rendered.txt",
+    "sha256": "86ff29b695ce342357bd4ea678eeccc62684052c87ccb951963ae1341f3a8492"
+  },
+  "allow.json": {
+    "source_relative_to_private_lab": "allow/.acv/codex-probe/evidence.json",
+    "sha256": "7c293ede73b47276cc3349011412b006dd9311ab9a80c54fa412863a8d3eb197"
+  },
+  "allow-hooks.jsonl": {
+    "source_relative_to_private_lab": "allow/.acv/codex-probe/hook-events.jsonl",
+    "sha256": "d1a1536a8bbf04bb6df7feb0d93fef9d60ee8f5f7f4264826d0b4d8ea22f2dd4"
+  },
+  "allow-rendered.txt": {
+    "source_relative_to_private_lab": "allow-evidence/rendered.txt",
+    "sha256": "2c0366202bb07beb34cc6ef28eb6c1ed5fded7f5088935885abd443f52e81804"
+  },
+  "malformed.json": {
+    "source_relative_to_private_lab": "malformed/.acv/codex-probe/evidence.json",
+    "sha256": "ced3f2a1f1c8295e31f2705c8a5929cb408974ee22e92ede152115ce112ff394"
+  },
+  "malformed-hooks.jsonl": {
+    "source_relative_to_private_lab": "malformed/.acv/codex-probe/hook-events.jsonl",
+    "sha256": "44cbc3e61a35625d30386ec5382c5c03973d5c6399c0e6b3e5d82aa3b82eb045"
+  },
+  "malformed-rendered.txt": {
+    "source_relative_to_private_lab": "malformed-evidence/rendered.txt",
+    "sha256": "2d12e176f9751c13a550402f5a1b6a9976145a489d719ee62c851f50d657ca95"
+  },
+  "deny-attempt1-collection.json": {
+    "source_relative_to_private_lab": "deny-collection-structured.json",
+    "sha256": "73d48e7f8dac186ccbdf3d78a40106a84891a4b013d06058ad01a7a3513a7ce8"
+  }
+}

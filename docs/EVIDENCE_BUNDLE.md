@@ -98,3 +98,7 @@ schemas/evidence-bundle.schema.json
 The Python validator is intentionally dependency-free and enforces the same core structural and integrity constraints used by ACV itself. External tooling can use the JSON Schema with its preferred standards-compliant validator.
 
 The schema identifier is a URN. ACV does not currently claim a permanent public schema-hosting domain.
+
+## First live evidence set
+
+The [Codex 0.154.0 report](reports/2026-09-19-codex-0.154.0.md) links three byte-preserved live bundles and separately retains the environment-blocked attempt that could not bind an action into a bundle. A controlled-failure `FAIL` is a supported detection result, not a validation error.

@@ -1,0 +1,78 @@
+{
+  "reviewed_at_utc": "2026-09-19T14:14:16.654409+00:00",
+  "tested_commit": "04efa04f05d95efa30963e8a4190556e60569127",
+  "host": "0.154.0",
+  "closeout_python": "3.13.3",
+  "unit_tests": {
+    "run": 116,
+    "failures": 0,
+    "errors": 0,
+    "command": "python -m unittest discover -s tests -v"
+  },
+  "bundles": {
+    "deny": {
+      "verdict": "pass",
+      "schema_and_integrity": "passed",
+      "independent_sha256": "e3ae51d0ea1b6f5ae312f8e317dfe8fb0a1fd08b8f9e5f3ec1e65c8378fe0cf1",
+      "separate_renderer_exit": 0,
+      "matches_original_rendering": true
+    },
+    "allow": {
+      "verdict": "pass",
+      "schema_and_integrity": "passed",
+      "independent_sha256": "945e5f463b416bcf615b7c530b979d325419e6aadf861bfb89675244fd203819",
+      "separate_renderer_exit": 0,
+      "matches_original_rendering": true
+    },
+    "malformed": {
+      "verdict": "fail",
+      "schema_and_integrity": "passed",
+      "independent_sha256": "4e7ace210a8d697f3f665b4b03febf4baa1134b17dfb284bc5850cae83c78d73",
+      "separate_renderer_exit": 0,
+      "matches_original_rendering": true
+    }
+  },
+  "original_manifest_checks": [
+    {
+      "manifest": "deny-artifact-sha256.json",
+      "entries": 23,
+      "passed": true
+    },
+    {
+      "manifest": "attempt2/artifact-sha256.json",
+      "entries": 26,
+      "passed": true
+    },
+    {
+      "manifest": "remediation-attempt2/artifact-sha256.json",
+      "entries": 14,
+      "passed": true
+    },
+    {
+      "manifest": "allow-evidence/artifact-sha256.json",
+      "entries": 27,
+      "passed": true
+    },
+    {
+      "manifest": "malformed-evidence/artifact-sha256.json",
+      "entries": 31,
+      "passed": true
+    }
+  ],
+  "additional_protected_hash_checks": 94,
+  "repository_copies": {
+    "count": 10,
+    "byte_identical": true
+  },
+  "attempt1": {
+    "verdict": "inconclusive",
+    "hook_record_count": 0,
+    "bundle_exists": false
+  },
+  "scope": "Offline closeout only; no new live experiments",
+  "git_diff_check": "passed",
+  "new_file_whitespace_checks": "passed; scoped cr-at-eol permits preserved Windows endings",
+  "git_clean_filter_preserves_captured_artifact_bytes": true,
+  "core_source_and_package_metadata_changed": false,
+  "closeout_scope": "Six existing documentation files, one consolidated report, redacted evidence copies and preservation/validation metadata only"
+}

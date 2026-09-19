@@ -7,9 +7,9 @@ ACV develops through evidence checkpoints rather than feature count. A milestone
 - `v0.0.1` decision/effect proof: complete
 - `v0.0.2` independent effects, approvals, and failure posture: complete
 - `v0.0.3` evidence-bundle core: substantially complete
-- `v0.1.0` first real host integration: in progress
+- `v0.1.0` first real host integration: evidence complete; closeout publication/release approval pending
 
-The current gate is not more synthetic functionality. It is reproducible evidence from a real Codex CLI `0.154.0` run.
+The four preserved outcomes and scope limits are documented in the [final evidence report](docs/reports/2026-09-19-codex-0.154.0.md). The remaining administrative gate is closeout review/publication, not another live experiment. Package metadata remains `0.0.3` pending an explicit release decision.
 
 See [`docs/PUBLIC_STATUS.md`](docs/PUBLIC_STATUS.md) for the short public checkpoint and [`docs/CODEX_PROBE.md`](docs/CODEX_PROBE.md) for the runnable experiment.
 
@@ -54,7 +54,7 @@ Goal: make results portable enough to save, inspect, validate, and compare witho
 - [x] Redacted-by-default evidence export
 - [x] Bundle integrity digest and validation
 - [x] Independent saved-bundle renderer
-- [ ] Populate ordered decision, invocation, and effect traces from a real observable source
+- [x] Populate ordered decision, invocation, and effect traces from the measured Codex hook source and independent collection-time effect observation
 - [ ] Add JUnit or SARIF output where the semantics are useful and do not flatten uncertainty
 
 ## v0.1.0: First real integration
@@ -69,14 +69,15 @@ Pinned host: Codex CLI `0.154.0`.
 - [x] Record redacted `PreToolUse` and `PostToolUse` evidence
 - [x] Build an evidence collector that independently reads marker-file state
 - [x] Add deterministic deny, allow, malformed-output, and hook-exit fixtures
-- [ ] Run the deny case against a real Codex `0.154.0` session
-- [ ] Verify the denied `apply_patch` against independent filesystem state
-- [ ] Run the allow case and pair pre/post hook evidence
-- [ ] Verify the expected allowed file effect independently
-- [ ] Measure one controlled hook-failure case and preserve the observed host posture
-- [ ] Record exact observed host, runtime, adapter, and evidence versions
-- [ ] Document unsupported or untested Codex tool paths explicitly
-- [ ] Publish a version-pinned evidence report without claiming certification
+- [x] Run the deny case against a real Codex `0.154.0` session
+- [x] Verify the denied `apply_patch` against independent filesystem state
+- [x] Run the allow case and pair pre/post hook evidence
+- [x] Verify the expected allowed file effect independently
+- [x] Measure one controlled hook-failure case and preserve the observed host posture
+- [x] Record exact observed host, runtime, adapter, and evidence versions
+- [x] Document unsupported or untested Codex tool paths explicitly
+- [x] Prepare the consolidated version-pinned evidence report and validated redacted artifacts without claiming certification
+- [ ] Publish the reviewed closeout (administrative follow-up; no further experiment required)
 
 The milestone is complete only when the saved evidence can be inspected independently and the result remains appropriately scoped to the observed Codex version and tool path.
 

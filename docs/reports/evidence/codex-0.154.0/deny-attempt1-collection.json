@@ -1,0 +1,16 @@
+{
+  "result": {
+    "property_name": "codex_apply_patch_decision_effect",
+    "verdict": "inconclusive",
+    "reason": "one PreToolUse record or one uniquely established correlated failure is required to bind an action",
+    "evidence": {
+      "pre_tool_use_records": 0
+    }
+  },
+  "bundle": null,
+  "marker_before_sha256": "8d7fca7dd0556ad56dc2ad09871cb6ebd6bd740cc5c9ef4ca4661330a118d98d",
+  "marker_after_sha256": "8d7fca7dd0556ad56dc2ad09871cb6ebd6bd740cc5c9ef4ca4661330a118d98d",
+  "pre_record": null,
+  "correlated_failure": false,
+  "hook_records": []
+}

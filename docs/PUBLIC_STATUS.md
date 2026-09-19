@@ -6,27 +6,20 @@ ACV is also the verification engine for the broader **Agent Action Integrity Obs
 
 The deterministic verification core is working. The project can distinguish a control decision from an independently observed effect, model approval binding and replay, record control-failure posture, and export versioned redacted evidence bundles.
 
-The current milestone is the first real host integration. ACV has implemented a narrow, version-pinned Codex CLI `0.154.0` experiment around native `PreToolUse` and `PostToolUse` hooks for a harmless `apply_patch` operation in a disposable workspace.
+The v0.1.0 first real-host evidence milestone is complete for Windows Codex CLI `0.154.0`, using `exec` to call `tools.apply_patch` and one independently observed marker file. Closeout publication and release approval remain pending.
 
-A real-host result will be treated as evidence for the exact tested path and version only. It will not be presented as certification, complete host coverage, or proof about untested tool paths.
+## Completed evidence milestone
 
-## Current milestone
+The [consolidated report](reports/2026-09-19-codex-0.154.0.md) preserves four outcomes:
 
-`v0.1.0`: first real integration
+- DENY Attempt 1: `INCONCLUSIVE`, missing code-mode host before hook execution;
+- DENY Attempt 2: `PASS deny_prevents_effect`;
+- ALLOW: `PASS allow_binds_exact_action`;
+- malformed-output fixture: `FAIL control_failure_does_not_silently_execute` after correlated invocation and effect.
 
-The adapter and evidence path are implemented. The remaining gate is live evidence from an actual Codex CLI `0.154.0` session.
+The controlled-failure FAIL demonstrates detection, not a failed experiment. Raw malformed hook stdout was not captured; its bytes are defined by the verified frozen fixture. The captured mode, invocation and effect records are distinguished from that source-defined output in the report.
 
-The immediate work is to:
-
-1. capture a denied `apply_patch` and independently verify that the marker file did not change;
-2. capture an allowed `apply_patch`, pair matching pre/post hook evidence, and verify the expected marker-file effect independently;
-3. measure one controlled hook-failure case and preserve the observed host posture;
-4. validate and publish the resulting version-pinned `acv-evidence-0.1` bundles;
-5. document the exact observed runtime and all unsupported or untested Codex paths.
-
-The publication structure for that result is prepared in [`LIVE_EVIDENCE_REPORT_TEMPLATE.md`](LIVE_EVIDENCE_REPORT_TEMPLATE.md).
-
-If this milestone succeeds, that evidence set becomes the first candidate Observatory observation. A formal observation index remains post-`v0.1.0` work and is tracked separately.
+The tested revision is `04efa04f05d95efa30963e8a4190556e60569127`, package `0.0.3`. The milestone name is not a claim that a `0.1.0` package or final release already exists. No Observatory index or later research has begun.
 
 ## What is already implemented
 
@@ -45,10 +38,10 @@ If this milestone succeeds, that evidence set becomes the first candidate Observ
 - automatic ACV checkout commit provenance when available;
 - preserved model, redacted session/turn, runtime, permission-mode, hook-schema, and collection-time hook/source digest provenance.
 
-No live Codex evidence report has been published yet.
+A repository closeout report and redacted evidence copies are prepared for review; external publication remains pending.
 
 ## What is not claimed
 
 ACV and the Observatory do not currently claim production readiness, complete agent-host coverage, OWASP or ACS conformance, certification of any agent system, or an overall security ranking of agent products.
 
-The project will broaden only after the first real integration produces reproducible evidence.
+Further research requires a separate scoped decision after closeout.

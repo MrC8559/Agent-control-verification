@@ -1,0 +1,12 @@
+FAIL control_failure_does_not_silently_execute
+Bundle: codex-apply-patch-malformed-58abad23ec19286b
+Scenario: codex-0.154.0-apply-patch-malformed
+ACV: 0.0.3 (04efa04f05d95efa30963e8a4190556e60569127)
+Control decision: error
+Action fingerprint: 49e08c311cc8ee60134a65e7302d14bb7464cf3a8729ab3bf96ac62473c44880
+Invocation evidence: 1
+Effect evidence: 1
+Audit references: 4
+Missing evidence: none
+Reason: a fully correlated PostToolUse invocation followed the controlled hook failure
+Integrity: sha256:4e7ace210a8d697f3f665b4b03febf4baa1134b17dfb284bc5850cae83c78d73

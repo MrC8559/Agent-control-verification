@@ -21,11 +21,11 @@ ACV is the verification engine for the broader **Agent Action Integrity Observat
 
 The deterministic verification core is working. ACV can independently observe filesystem effects across a process boundary, test approval binding and replay properties, model control failures, and export versioned redacted evidence bundles.
 
-The current milestone is **v0.1.0: first real host integration**. Codex CLI `0.154.0` is the pinned first host.
+The **v0.1.0 first real-host evidence milestone is complete** for the tested Windows Codex CLI `0.154.0` environment and controlled `apply_patch` scenarios. Closeout publication and release approval remain pending.
 
-The Codex adapter, disposable probe workspace, redacted hook recorder, evidence collector, provenance hardening, and live-run preflight are implemented. The remaining milestone is to capture reproducible live Codex evidence for deny, allow, and controlled hook-failure cases.
+The evidence preserves an environment-blocked DENY attempt as `INCONCLUSIVE`, a supported DENY `PASS`, an exact-action ALLOW `PASS`, and a controlled-failure `FAIL` after execution continued. The last result demonstrates detection of a violated failure-posture property; it is not an unsuccessful experiment.
 
-No live Codex evidence report has been published yet. ACV output is not a certification or security guarantee.
+See the [consolidated evidence report](docs/reports/2026-09-19-codex-0.154.0.md) and its validated redacted bundles. The tested package remains `0.0.3`; milestone completion does not silently change package or release versions. ACV output is not a certification or security guarantee.
 
 - [Public project status](docs/PUBLIC_STATUS.md)
 - [Agent Action Integrity Observatory](docs/ACTION_INTEGRITY_OBSERVATORY.md)
@@ -43,7 +43,7 @@ The experiment asks three questions:
 2. If the hook allows the patch, do the pre-tool and post-tool records correspond to the independently observed file effect?
 3. If the hook fails in a controlled way, does the host proceed, block, or leave the outcome uncertain?
 
-A result applies only to the exact version and execution path that was observed. ACV does not infer coverage for shell execution, Code Mode, MCP, subagents, or other tool paths from an `apply_patch` result.
+A result applies only to the exact version and execution path that was observed. The observed path was `exec` calling `tools.apply_patch`; this does not establish coverage of other Code Mode tools/routes, direct tool routes, shell execution, MCP, subagents, or other platforms.
 
 ## Why this exists
 
@@ -88,7 +88,7 @@ The default test suite does not contact a production agent, model provider, huma
 
 - Observe effects independently where the environment allows it.
 - Require evidence for `PASS`.
-- Return `INCONCLUSIVE` when evidence is missing or contradictory.
+- Return `INCONCLUSIVE` when evidence cannot support a verdict; a uniquely correlated violation may remain `FAIL` despite unrelated gaps.
 - Bind authorization to the exact action and authority scope.
 - Prefer deterministic tests before model-dependent tests.
 - Use synthetic local effects by default.
@@ -173,16 +173,7 @@ The machine-readable evidence schema is [`schemas/evidence-bundle.schema.json`](
 
 ## Next work
 
-The immediate sequence is:
-
-1. run preflight against an actual Codex CLI `0.154.0` installation;
-2. run the deny probe and independently verify the marker state;
-3. run the matching allow case and pair pre/post evidence with the observed file effect;
-4. capture one controlled hook-failure case;
-5. document observed and untested Codex paths explicitly;
-6. publish the first version-pinned evidence report without claiming certification.
-
-If that evidence set is complete and reproducible, it becomes the first candidate Agent Action Integrity Observatory observation. Only after that does the roadmap broaden toward an observation index, additional Codex execution paths, other agent hosts, MCP boundaries, and continuous regression testing.
+Review and publish the completed evidence closeout, reconcile the integration issues, and approve a consistent version/release action. No later research has started. The report lists bounded open questions; an Observatory index and additional execution paths remain separately scoped future work.
 
 See [`ROADMAP.md`](ROADMAP.md) for the longer sequence.
 
