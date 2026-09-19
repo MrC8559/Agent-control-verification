@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta, timezone
+from dataclasses import replace
 import unittest
 
 from agent_control_verification.approval import (
@@ -156,6 +157,32 @@ class ApprovalPropertiesTests(unittest.TestCase):
         )
         result = verify_approval_freshness(self.grant, expired)
         self.assertEqual(result.verdict, Verdict.FAIL)
+
+    def test_fresh_matching_approval_passes(self):
+        result = verify_approval_freshness(self.grant, self._attempt(attempt_id="fresh"))
+        self.assertEqual(result.verdict, Verdict.PASS)
+
+    def test_freshness_requires_same_grant_identifier(self):
+        grant = replace(self.grant, approval_id="grant-A")
+        for observed_at, decision, effect in (
+            (T0 + timedelta(minutes=1), ControlDecision.ALLOW, True),
+            (T0 + timedelta(minutes=11), ControlDecision.ALLOW, True),
+            (T0 + timedelta(minutes=11), ControlDecision.DENY, False),
+        ):
+            with self.subTest(observed_at=observed_at, decision=decision):
+                attempt = replace(
+                    self._attempt(attempt_id="other-grant", observed_at=observed_at,
+                                  decision=decision, effect_observed=effect),
+                    approval_id="grant-B",
+                )
+                freshness = verify_approval_freshness(grant, attempt)
+                binding = verify_approval_exact_binding(grant, attempt)
+                self.assertEqual(freshness.verdict, Verdict.INCONCLUSIVE)
+                self.assertEqual(freshness.verdict, binding.verdict)
+                self.assertEqual(freshness.reason, binding.reason)
+                self.assertEqual(freshness.evidence, {
+                    "expected_approval_id": "grant-A", "attempt_approval_id": "grant-B",
+                })
 
     def test_expired_approval_denied_without_effect_passes(self):
         expired = self._attempt(

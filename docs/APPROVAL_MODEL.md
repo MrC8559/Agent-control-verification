@@ -12,6 +12,8 @@ ACV currently tests three approval properties:
 
 Each property returns `PASS`, `FAIL`, or `INCONCLUSIVE`. Missing effect, timestamp, or consumption evidence is never converted into `PASS`.
 
+Exact-binding and freshness verification require the attempt to reference the supplied grant's approval identifier. A different identifier returns `INCONCLUSIVE`, even when the semantic binding and timestamps match, because that grant cannot establish the referenced approval's validity.
+
 ## Semantic binding fingerprint
 
 The approval binding fingerprint is SHA-256 over canonical JSON containing:

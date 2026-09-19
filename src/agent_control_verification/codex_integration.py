@@ -336,7 +336,7 @@ def prepare_codex_probe(
         manifest_file=(probe_dir / "manifest.json").resolve(),
         marker_file=(workspace / "acv-marker.txt").resolve(),
     )
-    paths.marker_file.write_text("BASELINE\n", encoding="utf-8")
+    paths.marker_file.write_bytes(b"BASELINE\n")
 
     hooks = build_codex_hooks_config(
         python_executable=python_executable,
@@ -351,7 +351,7 @@ def prepare_codex_probe(
         "codex_expected_version": CODEX_TARGET_VERSION,
         "pre_mode": pre_mode,
         "marker_path": "acv-marker.txt",
-        "marker_before_sha256": sha256_text("BASELINE\n"),
+        "marker_before_sha256": hashlib.sha256(paths.marker_file.read_bytes()).hexdigest(),
         "hooks_path": ".codex/hooks.json",
         "hooks_sha256": hashlib.sha256(paths.hooks_file.read_bytes()).hexdigest(),
         "hook_log_path": ".acv/codex-probe/hook-events.jsonl",

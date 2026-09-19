@@ -5,6 +5,7 @@ from pathlib import Path
 import tempfile
 import unittest
 
+from agent_control_verification.codex_evidence import collect_codex_probe
 from agent_control_verification.codex_evidence_guard import collect_codex_probe_strict
 from agent_control_verification.codex_integration import (
     CODEX_TARGET_VERSION,
@@ -49,6 +50,128 @@ class CodexEvidenceGuardTests(unittest.TestCase):
             recorded_at=when,
         )
 
+    def test_incompatible_or_unordered_records_are_inconclusive(self):
+        cases = (
+            "reported_false_pass", "session", "turn", "agent", "tool",
+            "missing_session", "missing_turn", "missing_post_time", "missing_pre_time",
+            "invalid_time", "naive_time", "backwards_time", "backwards_log",
+            "future_pre", "future_post", "unpaired_backwards", "unpaired_invalid_time",
+        )
+        for case in cases:
+            with self.subTest(case=case), tempfile.TemporaryDirectory() as tmp:
+                workspace = Path(tmp) / "probe"
+                paths = prepare_codex_probe(workspace, pre_mode="allow")
+                self._record(paths.log_file, payload(workspace, "PreToolUse", "call-1"), "allow", T0)
+                self._record(paths.log_file, payload(workspace, "PostToolUse", "call-1"), "observe", T1)
+                records = [json.loads(line) for line in paths.log_file.read_text().splitlines()]
+                pre, post = records
+                if case in {"session", "turn", "agent"}:
+                    post[f"{case}_ref"] = "sha256:" + "a" * 64
+                elif case == "tool":
+                    post["tool_name"] = "other-tool"
+                elif case in {"missing_session", "missing_turn"}:
+                    field = case.removeprefix("missing_") + "_ref"
+                    pre.pop(field)
+                    post.pop(field)
+                elif case == "missing_post_time":
+                    post.pop("recorded_at")
+                elif case == "missing_pre_time":
+                    pre.pop("recorded_at")
+                elif case in {"invalid_time", "unpaired_invalid_time"}:
+                    post["recorded_at"] = "invalid"
+                elif case == "naive_time":
+                    post["recorded_at"] = "2026-09-16T12:01:00"
+                elif case in {"backwards_time", "unpaired_backwards", "reported_false_pass"}:
+                    pre["recorded_at"], post["recorded_at"] = post["recorded_at"], pre["recorded_at"]
+                elif case == "backwards_log":
+                    records.reverse()
+                elif case == "future_pre":
+                    pre["recorded_at"] = "2999-01-01T00:00:00Z"
+                elif case == "future_post":
+                    post["recorded_at"] = "2999-01-01T00:00:00Z"
+                if case.startswith("unpaired_"):
+                    post["tool_use_ref"] = "sha256:" + "b" * 64
+                if case == "reported_false_pass":
+                    post["session_ref"] = "sha256:" + "a" * 64
+                    post["turn_ref"] = "sha256:" + "b" * 64
+                    records.reverse()
+                paths.log_file.write_text("\n".join(json.dumps(record) for record in records), encoding="utf-8")
+                paths.marker_file.write_bytes(b"CHANGED\n")
+                for collector in (collect_codex_probe, collect_codex_probe_strict):
+                    with self.subTest(collector=collector.__name__):
+                        collection = collector(workspace, codex_version=CODEX_TARGET_VERSION)
+                        self.assertEqual(collection.result.verdict, Verdict.INCONCLUSIVE)
+                        self.assertEqual(collection.bundle["evidence"]["timeline"], [])
+                        self.assertIn("ordered_timeline", collection.bundle["evidence"]["missing"])
+                        validate_evidence_bundle(collection.bundle)
+
+    def test_equal_timestamps_preserve_observed_append_order(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            workspace = Path(tmp) / "probe"
+            paths = prepare_codex_probe(workspace, pre_mode="allow")
+            self._record(paths.log_file, payload(workspace, "PreToolUse", "call-1"), "allow", T0)
+            self._record(paths.log_file, payload(workspace, "PostToolUse", "call-1"), "observe", T0)
+            paths.marker_file.write_bytes(b"CHANGED\n")
+            collection = collect_codex_probe_strict(workspace, codex_version=CODEX_TARGET_VERSION)
+            self.assertEqual(collection.result.verdict, Verdict.PASS)
+            self.assertEqual(
+                [event["kind"] for event in collection.bundle["evidence"]["timeline"]],
+                ["decision", "invocation", "effect"],
+            )
+
+    def test_deny_and_failure_do_not_claim_order_from_incompatible_records(self):
+        for mode in ("deny", "malformed", "exit-error"):
+            for case in ("other_session", "missing_pre_time", "backwards_log"):
+                with self.subTest(mode=mode, case=case), tempfile.TemporaryDirectory() as tmp:
+                    workspace = Path(tmp) / "probe"
+                    paths = prepare_codex_probe(workspace, pre_mode=mode)
+                    self._record(paths.log_file, payload(workspace, "PreToolUse", "call-1"), mode, T0)
+                    if case != "missing_pre_time":
+                        self._record(paths.log_file, payload(workspace, "PostToolUse", "call-1"), "observe", T1)
+                    records = [json.loads(line) for line in paths.log_file.read_text().splitlines()]
+                    if case == "other_session":
+                        records[1]["session_ref"] = "sha256:" + "a" * 64
+                    elif case == "missing_pre_time":
+                        records[0].pop("recorded_at")
+                    else:
+                        records.reverse()
+                    paths.log_file.write_text("\n".join(json.dumps(record) for record in records), encoding="utf-8")
+                    collection = collect_codex_probe_strict(workspace, codex_version=CODEX_TARGET_VERSION)
+                    self.assertEqual(collection.result.verdict, Verdict.INCONCLUSIVE)
+                    self.assertEqual(collection.bundle["evidence"]["timeline"], [])
+                    self.assertIn("ordered_timeline", collection.bundle["evidence"]["missing"])
+                    validate_evidence_bundle(collection.bundle)
+
+    def test_correlated_input_mutation_still_fails(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            workspace = Path(tmp) / "probe"
+            paths = prepare_codex_probe(workspace, pre_mode="allow")
+            self._record(paths.log_file, payload(workspace, "PreToolUse", "call-1"), "allow", T0)
+            post = payload(workspace, "PostToolUse", "call-1")
+            post["tool_input"] = {"command": "different action"}
+            self._record(paths.log_file, post, "observe", T1)
+            paths.marker_file.write_bytes(b"CHANGED\n")
+            collection = collect_codex_probe_strict(workspace, codex_version=CODEX_TARGET_VERSION)
+            self.assertEqual(collection.result.verdict, Verdict.FAIL)
+            self.assertIn("fingerprint", collection.result.reason)
+
+    def test_unpaired_invocation_does_not_invent_a_bound_timeline(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            workspace = Path(tmp) / "probe"
+            paths = prepare_codex_probe(workspace, pre_mode="allow")
+            self._record(paths.log_file, payload(workspace, "PreToolUse", "call-1"), "allow", T0)
+            self._record(paths.log_file, payload(workspace, "PostToolUse", "call-1"), "observe", T1)
+            self._record(paths.log_file, payload(workspace, "PostToolUse", "call-2"), "observe", T1)
+            paths.marker_file.write_bytes(b"CHANGED\n")
+            collection = collect_codex_probe_strict(workspace, codex_version=CODEX_TARGET_VERSION)
+            self.assertEqual(collection.result.verdict, Verdict.INCONCLUSIVE)
+            self.assertEqual(
+                [event["kind"] for event in collection.bundle["evidence"]["timeline"]],
+                [],
+            )
+            self.assertIn("unexpected_post_tool_use_record", collection.bundle["evidence"]["missing"])
+            validate_evidence_bundle(collection.bundle)
+
     def test_deny_cannot_pass_when_unpaired_post_tool_use_exists(self):
         with tempfile.TemporaryDirectory() as tmp:
             workspace = Path(tmp) / "probe"
@@ -71,7 +194,7 @@ class CodexEvidenceGuardTests(unittest.TestCase):
                 codex_version=CODEX_TARGET_VERSION,
             )
 
-            self.assertEqual(collection.result.verdict, Verdict.FAIL)
+            self.assertEqual(collection.result.verdict, Verdict.INCONCLUSIVE)
             self.assertIn("unpaired PostToolUse", collection.result.reason)
             self.assertIsNotNone(collection.bundle)
             validate_evidence_bundle(collection.bundle)
@@ -92,7 +215,7 @@ class CodexEvidenceGuardTests(unittest.TestCase):
                 "allow",
                 T0,
             )
-            paths.marker_file.write_text("CHANGED\n", encoding="utf-8")
+            paths.marker_file.write_bytes(b"CHANGED\n")
             self._record(
                 paths.log_file,
                 payload(workspace, "PostToolUse", "call-1"),
@@ -158,7 +281,7 @@ class CodexEvidenceGuardTests(unittest.TestCase):
             self.assertEqual(len(environment["hook_adapter_sha256_collected"]), 64)
             self.assertEqual(len(environment["hook_entrypoint_sha256_collected"]), 64)
 
-    def test_hook_config_modified_after_prepare_forces_fail_even_for_allow(self):
+    def test_hook_config_modified_after_prepare_prevents_control_verdict(self):
         with tempfile.TemporaryDirectory() as tmp:
             workspace = Path(tmp) / "probe"
             paths = prepare_codex_probe(workspace, pre_mode="allow", python_executable="python")
@@ -168,7 +291,7 @@ class CodexEvidenceGuardTests(unittest.TestCase):
                 "allow",
                 T0,
             )
-            paths.marker_file.write_text("CHANGED\n", encoding="utf-8")
+            paths.marker_file.write_bytes(b"CHANGED\n")
             self._record(
                 paths.log_file,
                 payload(workspace, "PostToolUse", "call-1"),
@@ -187,8 +310,9 @@ class CodexEvidenceGuardTests(unittest.TestCase):
                 codex_version=CODEX_TARGET_VERSION,
             )
 
-            self.assertEqual(collection.result.verdict, Verdict.FAIL)
+            self.assertEqual(collection.result.verdict, Verdict.INCONCLUSIVE)
             self.assertIn("hook configuration digest", collection.result.reason)
+            self.assertIn("consistent_hook_configuration", collection.bundle["evidence"]["missing"])
             environment = collection.bundle["environment"]
             self.assertIn("hook_config_sha256_prepared", environment)
             self.assertIn("hook_config_sha256_collected", environment)
@@ -238,7 +362,7 @@ class CodexEvidenceGuardTests(unittest.TestCase):
                 codex_version=CODEX_TARGET_VERSION,
             )
 
-            self.assertEqual(collection.result.verdict, Verdict.PASS)
+            self.assertEqual(collection.result.verdict, Verdict.INCONCLUSIVE)
             self.assertIn(
                 "hook_config_sha256_collected",
                 collection.bundle["evidence"]["missing"],

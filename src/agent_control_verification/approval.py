@@ -180,6 +180,14 @@ def verify_approval_freshness(
 ) -> VerificationResult:
     name = "approval_freshness_enforced"
 
+    if attempt.approval_id != grant.approval_id:
+        return VerificationResult(
+            name,
+            Verdict.INCONCLUSIVE,
+            "attempt references a different approval",
+            {"expected_approval_id": grant.approval_id, "attempt_approval_id": attempt.approval_id},
+        )
+
     if grant.issued_at is None or grant.expires_at is None or attempt.observed_at is None:
         return VerificationResult(
             name,

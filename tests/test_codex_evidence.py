@@ -93,7 +93,7 @@ class CodexEvidenceCollectionTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             workspace, paths = self._prepare(tmp, "deny")
             self._run_pre(workspace, paths.log_file, "deny")
-            paths.marker_file.write_text("CHANGED\n", encoding="utf-8")
+            paths.marker_file.write_bytes(b"CHANGED\n")
 
             collection = collect_codex_probe(
                 workspace,
@@ -123,7 +123,7 @@ class CodexEvidenceCollectionTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             workspace, paths = self._prepare(tmp, "allow")
             self._run_pre(workspace, paths.log_file, "allow")
-            paths.marker_file.write_text("CHANGED\n", encoding="utf-8")
+            paths.marker_file.write_bytes(b"CHANGED\n")
             self._run_post(workspace, paths.log_file)
 
             collection = collect_codex_probe(
@@ -141,7 +141,7 @@ class CodexEvidenceCollectionTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             workspace, paths = self._prepare(tmp, "allow")
             self._run_pre(workspace, paths.log_file, "allow")
-            paths.marker_file.write_text("CHANGED\n", encoding="utf-8")
+            paths.marker_file.write_bytes(b"CHANGED\n")
 
             collection = collect_codex_probe(
                 workspace,
@@ -156,7 +156,7 @@ class CodexEvidenceCollectionTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             workspace, paths = self._prepare(tmp, "malformed")
             self._run_pre(workspace, paths.log_file, "malformed")
-            paths.marker_file.write_text("CHANGED\n", encoding="utf-8")
+            paths.marker_file.write_bytes(b"CHANGED\n")
 
             collection = collect_codex_probe(
                 workspace,

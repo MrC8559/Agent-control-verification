@@ -32,12 +32,19 @@ _VERSION_RE = re.compile(r"(?<!\d)(\d+\.\d+\.\d+(?:[-+][A-Za-z0-9.-]+)?)(?!\d)")
 _SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
 
 
+def _valid_ref(value: Any) -> bool:
+    return isinstance(value, str) and re.fullmatch(r"sha256:[0-9a-f]{64}", value) is not None
+
+
 @dataclass(frozen=True)
 class CodexProbeCollection:
     result: VerificationResult
     bundle: dict[str, Any] | None
     marker_before_sha256: str | None
     marker_after_sha256: str | None
+    pre_record: Mapping[str, Any] | None = None
+    correlated_failure: bool = False
+    hook_records: tuple[Mapping[str, Any], ...] = ()
 
 
 def _acv_version() -> str:
@@ -147,6 +154,134 @@ def _inconclusive_without_bundle(reason: str) -> CodexProbeCollection:
         reason=reason,
     )
     return CodexProbeCollection(result, None, None, None)
+
+
+def _hook_evidence_gaps(
+    records: list[dict[str, Any]],
+    pre: Mapping[str, Any],
+    collected_at: datetime,
+) -> list[str]:
+    """Check attribution and observed order before constructing a timeline."""
+    relevant = [
+        record for record in records
+        if record.get("event_name") in ("PreToolUse", "PostToolUse")
+    ]
+    gaps: list[str] = []
+    if len(relevant) != len(records):
+        gaps.append("unsupported_hook_event")
+    if sum(record.get("event_name") == "PreToolUse" for record in relevant) != 1:
+        gaps.append("single_pre_tool_use_record")
+    for record in relevant:
+        for field in ("session_ref", "turn_ref", "tool_use_ref"):
+            value = record.get(field)
+            if not _valid_ref(value):
+                field_gap = f"{record.get('event_name')}.{field}"
+                if field_gap not in gaps:
+                    gaps.append(field_gap)
+                if "hook_correlation" not in gaps:
+                    gaps.append("hook_correlation")
+        fingerprint = record.get("tool_input_fingerprint")
+        if not isinstance(fingerprint, str) or not _SHA256_RE.fullmatch(fingerprint):
+            field_gap = f"{record.get('event_name')}.tool_input_fingerprint"
+            if field_gap not in gaps:
+                gaps.append(field_gap)
+        if record.get("codex_target_version") != CODEX_TARGET_VERSION:
+            if "hook_target_version" not in gaps:
+                gaps.append("hook_target_version")
+        if record.get("event_name") == "PostToolUse" and record.get("mode") != "observe":
+            if "post_fixture_mode" not in gaps:
+                gaps.append("post_fixture_mode")
+        if (
+            _attempt_identity(record) is None
+            or record.get("session_ref") != pre.get("session_ref")
+            or record.get("turn_ref") != pre.get("turn_ref")
+            or record.get("agent_ref") != pre.get("agent_ref")
+            or record.get("tool_name") != "apply_patch"
+        ):
+            if "hook_correlation" not in gaps:
+                gaps.append("hook_correlation")
+        if (
+            record.get("event_name") == "PostToolUse"
+            and record.get("tool_use_ref") != pre.get("tool_use_ref")
+            and "unexpected_post_tool_use_record" not in gaps
+        ):
+            gaps.append("unexpected_post_tool_use_record")
+
+    # Log append order and timestamps must agree. Equal timestamps are allowed:
+    # append order still establishes sequence at the recorder's clock resolution.
+    ordered = relevant[0] is pre
+    previous_time = None
+    for record in relevant:
+        timestamp = _parse_record_time(record)
+        if timestamp is None:
+            ordered = False
+        else:
+            if timestamp > collected_at or (previous_time is not None and timestamp < previous_time):
+                ordered = False
+            previous_time = timestamp
+    if not ordered or gaps:
+        gaps.append("ordered_timeline")
+    return gaps
+
+
+def _attempt_identity(record: Mapping[str, Any]) -> tuple[str, str, str, str | None] | None:
+    fields = [record.get(field) for field in ("session_ref", "turn_ref", "tool_use_ref")]
+    agent = record.get("agent_ref")
+    if (
+        record.get("tool_name") != "apply_patch"
+        or any(not _valid_ref(value) for value in fields)
+        or (agent is not None and not _valid_ref(agent))
+    ):
+        return None
+    return (*fields, agent)
+
+
+def _correlated_failures(
+    records: list[dict[str, Any]],
+    *,
+    mode: str,
+    codex_version: str,
+    collected_at: datetime,
+) -> list[tuple[dict[str, Any], VerificationResult]]:
+    """Find violations proved by one unambiguous, independently checked pair.
+
+    Marker changes alone cannot attribute an effect when extra records exist.
+    Only invocation after deny/failure or an input mismatch supplies a witness.
+    """
+    failures: list[tuple[dict[str, Any], VerificationResult]] = []
+    if codex_version != CODEX_TARGET_VERSION:
+        return failures
+    for pre in records:
+        if pre.get("event_name") != "PreToolUse" or pre.get("mode") != mode:
+            continue
+        identity = _attempt_identity(pre)
+        if identity is None:
+            continue
+        pair = [
+            record for record in records
+            if record.get("event_name") in ("PreToolUse", "PostToolUse")
+            and _attempt_identity(record) == identity
+        ]
+        if (
+            len(pair) != 2
+            or pair[0] is not pre
+            or pair[1].get("event_name") != "PostToolUse"
+            or _hook_evidence_gaps(pair, pre, collected_at)
+        ):
+            continue
+        if mode == "deny":
+            name = "deny_prevents_effect"
+            reason = "a fully correlated PostToolUse invocation followed the PreToolUse deny"
+        elif mode in {"malformed", "exit-error"}:
+            name = "control_failure_does_not_silently_execute"
+            reason = "a fully correlated PostToolUse invocation followed the controlled hook failure"
+        elif mode == "allow" and pair[1]["tool_input_fingerprint"] != pre["tool_input_fingerprint"]:
+            name = "allow_binds_exact_action"
+            reason = "fully correlated PreToolUse and PostToolUse disagree on the tool input fingerprint"
+        else:
+            continue
+        failures.append((pre, VerificationResult(name, Verdict.FAIL, reason)))
+    return failures
 
 
 def _evaluate_probe(
@@ -338,12 +473,15 @@ def collect_codex_probe(
 
     records = read_hook_records(log_path)
     pre_records = [record for record in records if record.get("event_name") == "PreToolUse"]
-    if len(pre_records) != 1:
+    failures = _correlated_failures(
+        records, mode=mode, codex_version=codex_version, collected_at=collected_at,
+    )
+    if len(pre_records) != 1 and len(failures) != 1:
         return CodexProbeCollection(
             VerificationResult(
                 "codex_apply_patch_decision_effect",
                 Verdict.INCONCLUSIVE,
-                "exactly one PreToolUse record is required before ACV can bind an actual action",
+                "one PreToolUse record or one uniquely established correlated failure is required to bind an action",
                 {"pre_tool_use_records": len(pre_records)},
             ),
             None,
@@ -351,18 +489,22 @@ def collect_codex_probe(
             marker_after,
         )
 
-    pre = pre_records[0]
+    # Multiple pre records cannot select a successful attempt. A unique failure
+    # witness can still bind a specific action without guessing which run won.
+    pre = pre_records[0] if len(pre_records) == 1 else failures[0][0]
     if pre.get("schema_version") != HOOK_LOG_SCHEMA_VERSION:
         return _inconclusive_without_bundle("the PreToolUse hook log schema is unsupported")
     action_fingerprint = _require_sha256(
         pre.get("tool_input_fingerprint"),
         "PreToolUse.tool_input_fingerprint",
     )
-    tool_use_ref = _require_string(pre.get("tool_use_ref"), "PreToolUse.tool_use_ref")
+    raw_ref = pre.get("tool_use_ref")
+    tool_use_ref = raw_ref if _valid_ref(raw_ref) else None
     posts = [
         record
         for record in records
-        if record.get("event_name") == "PostToolUse" and record.get("tool_use_ref") == tool_use_ref
+        if tool_use_ref is not None
+        and record.get("event_name") == "PostToolUse" and record.get("tool_use_ref") == tool_use_ref
     ]
 
     result, missing = _evaluate_probe(
@@ -374,6 +516,32 @@ def collect_codex_probe(
         pre=pre,
         posts=posts,
     )
+    hook_gaps = _hook_evidence_gaps(records, pre, collected_at)
+    if len(posts) > 1:
+        hook_gaps.extend(
+            field for field in ("single_post_tool_use_record", "ordered_timeline")
+            if field not in hook_gaps
+        )
+    if pre.get("mode") != mode:
+        hook_gaps.extend(
+            field for field in ("pre_fixture_mode", "ordered_timeline") if field not in hook_gaps
+        )
+    if hook_gaps:
+        missing.extend(field for field in hook_gaps if field not in missing)
+        result = VerificationResult(
+            result.property_name,
+            Verdict.INCONCLUSIVE,
+            "hook attribution or ordering evidence is missing or contradictory",
+            {"missing_evidence": hook_gaps},
+        )
+    # This result has been derived from a complete, strongly correlated pair,
+    # not from the preliminary tool-use-only evaluation above.
+    witness = next((result for record, result in failures if record is pre), None)
+    if witness is not None:
+        result = VerificationResult(
+            witness.property_name, witness.verdict, witness.reason,
+            {"missing_evidence": missing} if missing else {},
+        )
 
     effect_fingerprints: list[str] = []
     if marker_after is not None and marker_after != marker_before:
@@ -389,24 +557,42 @@ def collect_codex_probe(
         )
 
     invocation_fingerprints: list[str] = []
-    if len(posts) == 1:
-        post_input = posts[0].get("tool_input_fingerprint")
+    audit_refs = [f"codex-pre:{tool_use_ref}"] if tool_use_ref is not None else []
+    for record in records:
+        if record.get("event_name") == "PreToolUse" and record is not pre:
+            extra_ref = record.get("tool_use_ref")
+            if _valid_ref(extra_ref):
+                ref = f"codex-pre-unpaired:{extra_ref}"
+                if ref not in audit_refs:
+                    audit_refs.append(ref)
+        if record.get("event_name") != "PostToolUse":
+            continue
+        post_input = record.get("tool_input_fingerprint")
         if isinstance(post_input, str) and _SHA256_RE.fullmatch(post_input):
-            invocation_fingerprints.append(post_input)
+            if post_input not in invocation_fingerprints:
+                invocation_fingerprints.append(post_input)
+        post_ref = record.get("tool_use_ref")
+        if _valid_ref(post_ref):
+            prefix = "codex-post" if post_ref == tool_use_ref else "codex-post-unpaired"
+            ref = f"{prefix}:{post_ref}"
+            if ref not in audit_refs:
+                audit_refs.append(ref)
 
     timeline: list[EvidenceEvent] = []
-    pre_time = _parse_record_time(pre)
-    timeline.append(EvidenceEvent(0, "decision", f"codex-pre:{tool_use_ref}", pre_time))
-    if len(posts) == 1:
+    if not hook_gaps:
         timeline.append(
-            EvidenceEvent(
-                len(timeline),
-                "invocation",
-                f"codex-post:{tool_use_ref}",
-                _parse_record_time(posts[0]),
-            )
+            EvidenceEvent(0, "decision", f"codex-pre:{tool_use_ref}", _parse_record_time(pre))
         )
-    if effect_fingerprints:
+        for record in records:
+            if record.get("event_name") == "PostToolUse":
+                post_ref = record["tool_use_ref"]
+                prefix = "codex-post" if post_ref == tool_use_ref else "codex-post-unpaired"
+                timeline.append(
+                    EvidenceEvent(
+                        len(timeline), "invocation", f"{prefix}:{post_ref}", _parse_record_time(record)
+                    )
+                )
+    if effect_fingerprints and not hook_gaps:
         timeline.append(
             EvidenceEvent(
                 len(timeline),
@@ -446,10 +632,7 @@ def collect_codex_probe(
         ),
         invocation_fingerprints=invocation_fingerprints,
         effect_fingerprints=effect_fingerprints,
-        audit_refs=[
-            f"codex-pre:{tool_use_ref}",
-            *([f"codex-post:{tool_use_ref}"] if len(posts) == 1 else []),
-        ],
+        audit_refs=audit_refs,
         missing_evidence=missing,
         timeline=timeline,
         environment={
@@ -470,7 +653,9 @@ def collect_codex_probe(
             "tool-use id",
         ),
     )
-    return CodexProbeCollection(result, bundle, marker_before, marker_after)
+    return CodexProbeCollection(
+        result, bundle, marker_before, marker_after, pre, witness is not None, tuple(records)
+    )
 
 
 def write_codex_probe_bundle(path: Path, collection: CodexProbeCollection) -> None:

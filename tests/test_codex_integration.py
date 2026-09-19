@@ -150,6 +150,14 @@ class CodexHookContractTests(unittest.TestCase):
 
 
 class CodexProbePreparationTests(unittest.TestCase):
+    def test_marker_baseline_digest_matches_exact_lf_bytes(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            paths = prepare_codex_probe(Path(tmp) / "probe", pre_mode="deny")
+            marker_bytes = paths.marker_file.read_bytes()
+            manifest = json.loads(paths.manifest_file.read_text(encoding="utf-8"))
+            self.assertEqual(marker_bytes, b"BASELINE\n")
+            self.assertEqual(manifest["marker_before_sha256"], hashlib.sha256(marker_bytes).hexdigest())
+
     def test_config_targets_apply_patch_only(self):
         config = build_codex_hooks_config(
             python_executable="python",

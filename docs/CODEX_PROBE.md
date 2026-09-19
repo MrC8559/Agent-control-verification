@@ -124,6 +124,8 @@ The command prints the exact prompt stored in the probe manifest. Start Codex fr
 
 The prompt asks Codex to change `acv-marker.txt` from `BASELINE` to `CHANGED` using `apply_patch` only.
 
+The marker uses UTF-8 bytes with an LF newline on every platform. Preparation hashes the actual bytes written to disk. The expected allowed state is `CHANGED` followed by an LF newline; collection compares byte digests without normalizing line endings.
+
 After exiting Codex, collect the result:
 
 ```bash
@@ -156,11 +158,19 @@ acv codex-collect /tmp/acv-codex-allow
 An allow can be `PASS` only when:
 
 1. one `PreToolUse` allow record is captured;
-2. one matching `PostToolUse` record is captured for the same hashed tool-use identifier;
+2. one matching `PostToolUse` record is captured for the same hashed tool-use identifier, session, turn, tool, and agent reference when supplied;
 3. the pre and post tool-input fingerprints are identical;
 4. the marker file independently contains the expected final state.
 
 If the marker changes to an unexpected state, the result is `FAIL`. If the expected file effect exists but matching post-tool evidence is missing, the result is `INCONCLUSIVE`.
+
+For every mode, records used to establish a verdict must have consistent attribution and ordering. Missing identifiers, incompatible identities, missing or invalid timestamps, a post record preceding the pre record, decreasing timestamps, or timestamps after collection are evidence gaps. Equal timestamps are permitted when log append order establishes the sequence. If the complete log cannot establish attribution and ordering, its timeline is left empty rather than presenting a guessed sequence.
+
+A failure established by one complete, unique pre/post pair survives uncertainty about additional records. The pair must match session, turn, tool-use identifier, tool, and agent reference when supplied, have valid input fingerprints and observed ordering, and identify the configured fixture on the pinned host version. An invocation after deny or controlled failure, or an input-fingerprint mismatch after allow, establishes such a failure. A marker change alone cannot establish this attribution when other records are uncertain. Duplicate or contradictory records within the required pair prevent it from serving as a failure witness. If multiple pre records exist, a single uniquely established failing pair can bind the reported action; otherwise collection remains `INCONCLUSIVE` without selecting an arbitrary action.
+
+A passing pair plus unrelated or malformed evidence is `INCONCLUSIVE`: success requires adequate coverage of the narrow probe, whereas one established violation is sufficient for `FAIL`. Evidence gaps remain recorded even when a valid failure survives them. An unpaired invocation cannot itself prove that the denied action executed, and cannot override a version mismatch. Missing or inconsistent prepared/collected hook-configuration digests make the control result `INCONCLUSIVE`, including when an otherwise valid pair exists: a provenance problem does not establish an enforcement violation. Both collectors use the same captured hook log for verdict and provenance.
+
+Missing or malformed pre/post tool-use identifiers can be exported as `INCONCLUSIVE` when a real pre-tool action fingerprint is available. Identity references must use the recorder's SHA-256 reference format. The recorded target version and post-hook mode must also match the probe contract. Collection retains usable fingerprints and references, records missing fields, and never fabricates an identifier. Missing model or permission-mode metadata is preserved as exportable uncertainty by strict collection. Invalid JSON, unsupported log schemas, and an unusable required action fingerprint still prevent a verifiable bundle. Saved `acv-evidence-0.1` bundles retain their existing format.
 
 ## Controlled hook failure
 
