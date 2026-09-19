@@ -88,4 +88,4 @@ Each direction must earn its place through a measurable property and an independ
 
 Research programme defined. No Observatory dataset or cross-host matrix is published yet.
 
-The ACV evidence closeout is prepared for review. A formal Observatory index remains deferred under issue #29; no such work is included in this milestone.
+The ACV evidence closeout and v0.1.0 release are published. A formal Observatory index remains deferred under issue #29; no such work is included in this milestone.

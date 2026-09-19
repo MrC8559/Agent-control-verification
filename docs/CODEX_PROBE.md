@@ -19,7 +19,7 @@ ACV can now:
 - produce an `acv-evidence-0.1` bundle when an actual `PreToolUse` action was captured;
 - refuse to report `PASS` when the observed Codex version differs from `0.154.0`.
 
-The [2026-09-19 evidence report](reports/2026-09-19-codex-0.154.0.md) records the completed Windows live cases and an earlier environment-blocked attempt. Its redacted artifacts are prepared for closeout review. This does not establish other-host or other-tool coverage.
+The [2026-09-19 evidence report](reports/2026-09-19-codex-0.154.0.md) records the completed Windows live cases and an earlier environment-blocked attempt. Its reviewed redacted artifacts are published with the evidence closeout. This does not establish other-host or other-tool coverage.
 
 The first attempt exposed a preparation limit: ACV preflight checks the main Codex version and probe contract, but does not prove that all host companion executables can start. The repaired official 0.154.0 code-mode host was independently smoke-tested outside the experiment workspaces before a fresh DENY attempt. Preserve each failed attempt and any remediation separately.
 

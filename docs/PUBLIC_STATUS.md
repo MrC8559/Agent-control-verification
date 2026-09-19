@@ -6,7 +6,7 @@ ACV is also the verification engine for the broader **Agent Action Integrity Obs
 
 The deterministic verification core is working. The project can distinguish a control decision from an independently observed effect, model approval binding and replay, record control-failure posture, and export versioned redacted evidence bundles.
 
-The v0.1.0 first real-host evidence milestone is complete for Windows Codex CLI `0.154.0`, using `exec` to call `tools.apply_patch` and one independently observed marker file. The reviewed closeout is published; final release publication remains pending.
+The v0.1.0 first real-host evidence milestone is complete for Windows Codex CLI `0.154.0`, using `exec` to call `tools.apply_patch` and one independently observed marker file. The reviewed closeout and [ACV v0.1.0](https://github.com/MrC8559/Agent-control-verification/releases/tag/v0.1.0) are formally published. The release remains experimental, pre-alpha research.
 
 ## Completed evidence milestone
 
@@ -19,7 +19,7 @@ The [consolidated report](reports/2026-09-19-codex-0.154.0.md) preserves four ou
 
 The controlled-failure FAIL demonstrates detection, not a failed experiment. Raw malformed hook stdout was not captured; its bytes are defined by the verified frozen fixture. The captured mode, invocation and effect records are distinguished from that source-defined output in the report.
 
-The tested revision is `04efa04f05d95efa30963e8a4190556e60569127`, package `0.0.3`. The reviewed evidence closeout was published in commit `7396b6526b2ce6562249169fa707cf261d38a348`. Current package metadata is prepared as `0.1.0`; this release preparation changes version metadata and current status documentation only. The live experiment was not rerun against the closeout or release-preparation changes. No final `v0.1.0` tag or GitHub release exists yet. No Observatory index or later research has begun.
+The tested revision is `04efa04f05d95efa30963e8a4190556e60569127`, package `0.0.3`. The reviewed evidence closeout was published in commit `7396b6526b2ce6562249169fa707cf261d38a348`. The formal `v0.1.0` release commit is `254d288076ae05f5c5a823c52c21e6d5d9b5af0e`; it aligned version metadata and current status documentation only. The live experiment was not rerun against the closeout or release-preparation changes. The historical `v0.1.0-rc1` tag remains untouched at `c12a65ae61e40c4152dbc1103688d36684c856ed`. No Observatory index or later research has begun.
 
 ## What is already implemented
 
@@ -44,4 +44,4 @@ The repository closeout report and redacted evidence copies are published, and i
 
 ACV and the Observatory do not currently claim production readiness, complete agent-host coverage, OWASP or ACS conformance, certification of any agent system, or an overall security ranking of agent products.
 
-Further research requires a separate scoped decision after closeout.
+Further research is deferred pending a separate prioritization decision. Issues #20–#24 and #29 remain open and deferred; the existing roadmap records possible future directions.

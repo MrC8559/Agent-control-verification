@@ -7,9 +7,9 @@ ACV develops through evidence checkpoints rather than feature count. A milestone
 - `v0.0.1` decision/effect proof: complete
 - `v0.0.2` independent effects, approvals, and failure posture: complete
 - `v0.0.3` evidence-bundle core: substantially complete
-- `v0.1.0` first real host integration: evidence complete; closeout published; final release pending
+- `v0.1.0` first real host integration: complete; evidence closeout and final release published
 
-The four preserved outcomes and scope limits are documented in the [final evidence report](docs/reports/2026-09-19-codex-0.154.0.md). The reviewed closeout is published. Package metadata is prepared as `0.1.0`; final commit, CI, tag and release steps remain pending. No further live experiment is required for this milestone.
+The four preserved outcomes and scope limits are documented in the [final evidence report](docs/reports/2026-09-19-codex-0.154.0.md). The reviewed closeout and [ACV v0.1.0](https://github.com/MrC8559/Agent-control-verification/releases/tag/v0.1.0) are published. Further research is deferred pending a separate prioritization decision; issues #20–#24 and #29 remain open and deferred. The directions below are possibilities, not newly authorized work.
 
 See [`docs/PUBLIC_STATUS.md`](docs/PUBLIC_STATUS.md) for the short public checkpoint and [`docs/CODEX_PROBE.md`](docs/CODEX_PROBE.md) for the runnable experiment.
 
